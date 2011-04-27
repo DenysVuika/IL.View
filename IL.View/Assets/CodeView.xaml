@@ -1,0 +1,26 @@
+﻿<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:cv="clr-namespace:IL.View.Controls.CodeView">
+
+  <Style TargetType="cv:CodeTextBlock">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="cv:CodeTextBlock">
+          <TextBlock x:Name="TextBlock" Margin="{TemplateBinding Margin}"/>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style TargetType="cv:CodeTextBox">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="cv:CodeTextBox">
+          <RichTextBox x:Name="TextBox" Margin="{TemplateBinding Margin}" TextWrapping="NoWrap" IsReadOnly="True" Background="White"/>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  
+</ResourceDictionary>

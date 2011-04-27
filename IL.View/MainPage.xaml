@@ -1,0 +1,57 @@
+<UserControl
+    x:Class="IL.View.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation" 
+    xmlns:controls="clr-namespace:IL.View.Controls"   
+    >
+  <UserControl.Resources>
+    <Style TargetType="controls:SimpleNode" BasedOn="{StaticResource TreeViewItemBase}"/>
+    <Style TargetType="controls:AssemblyNode" BasedOn="{StaticResource TreeViewItemBase}"/>
+    <Style TargetType="controls:ModuleNode" BasedOn="{StaticResource TreeViewItemBase}"/>
+    <Style TargetType="controls:NamespaceNode" BasedOn="{StaticResource TreeViewItemBase}"/>
+    <Style TargetType="controls:AssemblyReferenceNode" BasedOn="{StaticResource TreeViewItemBase}"/>
+    <Style TargetType="controls:TypeNode" BasedOn="{StaticResource TreeViewItemBase}"/>
+    <Style TargetType="controls:FieldNode" BasedOn="{StaticResource TreeViewItemBase}"/>
+    <Style TargetType="controls:MethodNode" BasedOn="{StaticResource TreeViewItemBase}"/>
+    <Style TargetType="controls:PropertyNode" BasedOn="{StaticResource TreeViewItemBase}"/>
+    <Style TargetType="controls:EventNode" BasedOn="{StaticResource TreeViewItemBase}"/>
+  </UserControl.Resources>
+
+  <Grid>
+
+    <controls:TiledBackground SourceUri="/IL.View;component/Images/backgroundtexture.png" />
+    <Image Source="/IL.View;component/Images/backgroundshadow.png" Stretch="Fill" />
+
+    <Border x:Name="BackgroundBorder" Style="{StaticResource BackgroundBorderStyle}" />
+
+    <Border x:Name="LinksBorder" Style="{StaticResource NavLinksBorderStyle}" />
+
+    <Grid x:Name="LayoutRoot" Style="{StaticResource LayoutRootGridStyle}">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+
+      <StackPanel x:Name="LinksStackPanel" Style="{StaticResource LinksStackPanelStyle}">
+        <HyperlinkButton Style="{StaticResource LinkStyle}" NavigateUri="Home" TargetName="ContentFrame" Content="Home" />
+        <HyperlinkButton Style="{StaticResource LinkStyle}" NavigateUri="Settings" TargetName="ContentFrame" Content="Settings" />
+        <HyperlinkButton Style="{StaticResource LinkStyle}" NavigateUri="About" TargetName="ContentFrame" Content="About" />
+      </StackPanel>
+
+      <Border x:Name="BrandingBorder" Style="{StaticResource NavBrandingBorderStyle}" Grid.Row="1">
+        <StackPanel x:Name="BrandingStackPanel" Style="{StaticResource NavBrandingStackPanelStyle}">
+          <TextBlock x:Name="ApplicationNameTextBlock" Style="{StaticResource ApplicationNameStyle}" Text="IL.View" />
+          <ContentControl Style="{StaticResource NavLogoIcon}" VerticalAlignment="Bottom" />
+        </StackPanel>
+      </Border>
+
+      <Border x:Name="ContentBorder" Style="{StaticResource NavContentBorderStyle}" Grid.Row="2">
+        <navigation:Frame x:Name="ContentFrame" Style="{StaticResource NavContentFrameStyle}" Navigated="ContentFrame_Navigated" NavigationFailed="ContentFrame_NavigationFailed"/>
+      </Border>
+
+    </Grid>
+
+  </Grid>
+</UserControl>

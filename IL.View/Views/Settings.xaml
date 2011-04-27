@@ -1,0 +1,32 @@
+﻿<navigation:Page 
+  x:Class="IL.View.Views.Settings" 
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"   
+  xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation"
+  xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
+  xmlns:model="clr-namespace:IL.View.Model"
+  Style="{StaticResource PageStyle}"
+  Title="Settings Page">
+  
+  <navigation:Page.DataContext>
+    <model:AssemblyBrowserSettings/>
+  </navigation:Page.DataContext>
+
+  <Grid x:Name="LayoutRoot">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>      
+    </Grid.RowDefinitions>    
+    <TextBlock x:Name="HeaderText" Grid.Row="0" Style="{StaticResource HeaderTextStyle}" Text="Settings" />
+    <sdk:TabControl Grid.Row="1">
+      <sdk:TabItem Header="Assembly Browser">
+        <StackPanel>
+          <CheckBox Content="Automatic Disassembling" 
+                    IsChecked="{Binding AutoDisassemble, Mode=TwoWay}"
+                    ToolTipService.ToolTip="Determines whether the source code should be displayed automatically."/>
+        </StackPanel>
+      </sdk:TabItem>
+      <sdk:TabItem Header="Disassembler"/>
+    </sdk:TabControl>
+  </Grid>
+</navigation:Page>

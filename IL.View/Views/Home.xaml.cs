@@ -1,0 +1,556 @@
+/*
+ * The MIT License
+ * 
+ * Copyright © 2011, Denys Vuika
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * */
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.Composition;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Navigation;
+using IL.View.Controls;
+using IL.View.Controls.CodeView;
+using IL.View.Decompiler;
+using IL.View.Model;
+using IL.View.Views;
+using Mono.Cecil;
+
+namespace IL.View
+{
+  public partial class Home : Page
+  {
+    private Queue<FileInfo> _pendingDownloads = new Queue<FileInfo>();
+    private BusyIndicatorContext _busyContext = new BusyIndicatorContext();
+
+    [Import]
+    public DecompilerManager DecompilerManager { get; set; }
+
+    private static BaseAssemblyResolver AssemblyResolver
+    {
+      get { return (GlobalAssemblyResolver.Instance as BaseAssemblyResolver); }
+    }
+
+    public Home()
+    {
+      InitializeComponent();
+      CompositionInitializer.SatisfyImports(this);
+      LayoutRoot.DataContext = ApplicationModel.Current;
+    }
+
+    // Executes when the user navigates to this page.
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+      // enable "Code Uri" usage
+      if (!UriParser.IsKnownScheme("code"))
+        UriParser.Register(new GenericUriParser(GenericUriParserOptions.GenericAuthority), "code", -1);
+
+      // Register a handler for Drop event
+      LayoutRoot.Drop += LayoutRoot_Drop;
+      DownloadIndicator.DataContext = _busyContext;
+
+      ApplicationModel.Current.AssemblyCache.AssemblyAdded += AssemblyCache_AssemblyAdded;
+      ApplicationModel.Current.AssemblyCache.AssemblyRemoved += AssemblyCache_AssemblyRemoved;
+      DecompilerManager.CodeDisassemblyRequested += OnCodeDisassemblyRequested;
+      ApplicationModel.Current.CurrentLanguageChanged += OnCurrentLanguageChanged;
+      
+    }
+        
+    // Executes when the user navigates from this page.
+    protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+    {
+      LayoutRoot.Drop -= LayoutRoot_Drop;
+      ApplicationModel.Current.AssemblyCache.AssemblyAdded -= AssemblyCache_AssemblyAdded;
+      ApplicationModel.Current.AssemblyCache.AssemblyRemoved -= AssemblyCache_AssemblyRemoved;
+      DecompilerManager.CodeDisassemblyRequested -= OnCodeDisassemblyRequested;
+      ApplicationModel.Current.CurrentLanguageChanged -= OnCurrentLanguageChanged;
+      base.OnNavigatingFrom(e);
+    }
+
+    private void AssemblyCache_AssemblyAdded(object sender, AssemblyDefinitionEventArgs e)
+    {
+      LoadAssembly(e.Definition);
+    }
+
+    private void AssemblyCache_AssemblyRemoved(object sender, AssemblyDefinitionEventArgs e)
+    {
+      // TODO: Physically remove cached assembly
+      UnloadAssemblyView(e.Definition);
+    }
+
+    private void OnCodeDisassemblyRequested(object sender, DecompileRequestEventArgs e)
+    {      
+      DisassembleProgress.IsBusy = true;
+      var task = new DecompileTask(SourceView, e.Target);
+      Thread thread = new Thread(new ParameterizedThreadStart(DoShowCode));
+      thread.Start(task);
+    }
+
+    private void OnCurrentLanguageChanged(object sender, EventArgs e)
+    {
+      if (SourceView.Tag != null)
+        DecompilerManager.RequestCodeDisassembly(SourceView.Tag);
+    }
+
+    // Queue the FileInfo objects representing dropped files
+    private void LayoutRoot_Drop(object sender, DragEventArgs e)
+    {
+      if (e.Data != null)
+      {
+        var files = e.Data.GetData(DataFormats.FileDrop) as FileInfo[];
+
+        foreach (FileInfo fi in files)
+          _pendingDownloads.Enqueue(fi);
+
+        DownloadPendingAssemblies();
+      }
+    }
+
+    private void DownloadPendingAssemblies()
+    {
+      if (_pendingDownloads.Count == 0) return;
+
+      _busyContext.IsBusy = true;
+
+      ThreadPool.QueueUserWorkItem(o =>
+      {
+        while (_pendingDownloads.Count > 0)
+        {
+          var fileInfo = _pendingDownloads.Dequeue();
+
+          Dispatcher.BeginInvoke(() => { _busyContext.ItemLabel = fileInfo.Name; });
+
+          //Thread.Sleep(10000);
+
+          try
+          {
+            var assembly = AssemblyDefinition.ReadAssembly(fileInfo.OpenRead());
+            if (assembly.IsSilverlight())
+              StorageService.CacheSilverlightAssembly(fileInfo.Name, fileInfo.OpenRead());
+            else
+              StorageService.CacheNetAssembly(fileInfo.Name, fileInfo.OpenRead());
+            Dispatcher.BeginInvoke(() => LoadOrReplaceAssembly(assembly));
+          }
+          catch (Exception ex)
+          {
+            Debug.WriteLine(ex.Message);
+          }
+        }
+
+        Dispatcher.BeginInvoke(() => _busyContext.IsBusy = false);
+      });
+    }
+
+    private void LoadAssembly(AssemblyDefinition definition)
+    {
+      var node = new AssemblyNode(definition);
+
+      if (definition.IsSilverlight())
+        SilverlightAssemblies.Items.Add(node);
+      else
+        NetAssemblies.Items.Add(node);
+    }
+
+    private void UnloadAssemblyView(AssemblyDefinition definition)
+    {
+      var root = definition.IsSilverlight() ? SilverlightAssemblies : NetAssemblies;
+      var view = root.Items.OfType<TreeNode>().FirstOrDefault(item => item.Component == definition);
+      root.Items.Remove(view);
+    }
+
+    private void LoadOrReplaceAssembly(AssemblyDefinition definition)
+    {
+      var assemblyView = new AssemblyNode(definition);
+
+      if (definition.IsSilverlight())
+        AddOrReplaceAssemblyView(SilverlightAssemblies, assemblyView);
+      else
+        AddOrReplaceAssemblyView(NetAssemblies, assemblyView);
+    }
+
+    // TODO: Maybe check against AssemblyChache instead of visual tree?
+    private void AddOrReplaceAssemblyView(TreeView root, TreeViewItem assemblyView)
+    {
+      var definition = assemblyView.Tag as AssemblyDefinition;
+
+      bool replaced = false;
+
+      foreach (var item in root.Items.OfType<TreeViewItem>().ToArray())
+      {
+        var existing = item.Tag as AssemblyDefinition;
+        if (existing == null) continue;
+
+        if (existing.FullName.Equals(definition.FullName, StringComparison.OrdinalIgnoreCase))
+        {
+          var index = root.Items.IndexOf(item);
+          root.Items.Insert(index, assemblyView);
+          root.Items.Remove(item);
+          replaced = true;
+          break;
+        }
+      }
+
+      if (replaced) return;
+      root.Items.Add(assemblyView);
+    }
+
+    private void OnLoadAssemblyClick(object sender, RoutedEventArgs e)
+    {
+      var dlg = new OpenFileDialog();
+      if (dlg.ShowDialog() == true)
+      {
+        Dispatcher.BeginInvoke(() =>
+        {
+          try
+          {
+            var definition = AssemblyDefinition.ReadAssembly(dlg.File.OpenRead());
+            if (definition.IsSilverlight())
+              StorageService.CacheSilverlightAssembly(dlg.File.Name, dlg.File.OpenRead());
+            else
+              StorageService.CacheNetAssembly(dlg.File.Name, dlg.File.OpenRead());
+
+            LoadOrReplaceAssembly(definition);
+          }
+          catch (Exception ex)
+          {
+            Debug.WriteLine(ex.Message);
+          }
+        });
+      }
+    }
+
+    private void OnItemSelected(object sender, RoutedPropertyChangedEventArgs<object> e)
+    {
+      //ShowCode(e.NewValue);
+      //ShowCodeUri(e.NewValue);
+
+      if (AssemblyBrowserSettings.Current.AutoDisassemble)
+      {
+        var node = e.NewValue as TreeNode;
+        if (node == null) return;
+        Dispatcher.BeginInvoke(() => DecompilerManager.RequestCodeDisassembly(node.Component));
+      }      
+    }
+
+    //private void ShowCodeUri(object source)
+    //{
+    //  var item = source as EntityView;
+    //}
+
+    private void DoShowCode(object parameter)
+    {
+      var task = parameter as DecompileTask;
+
+      AssemblyResolver.ResolveFailure += TryResolveAssembly;
+      string code = GetCode(task.Source);
+      AssemblyResolver.ResolveFailure -= TryResolveAssembly;
+      Dispatcher.BeginInvoke(() =>
+      {
+        // TODO: Needs redesign
+        if (ApplicationModel.Current.CurrentLanguage == LanguageInfoList.CSharp)
+          SourceView.SourceLanguage = SourceLanguageType.CSharp;
+        else
+          SourceView.SourceLanguage = SourceLanguageType.IL;
+
+        task.View.SourceCode = code;
+        task.View.Tag = task.Source;
+
+        DisassembleProgress.IsBusy = false;
+      });
+    }
+
+    private AssemblyDefinition TryResolveHigherVersionAssembly(AssemblyNameReference reference)
+    {
+      foreach (var assembly in ApplicationModel.Current.AssemblyCache.Assemblies)
+      {
+        var name = assembly.Name;
+
+        if (!name.Name.Equals(reference.Name, StringComparison.OrdinalIgnoreCase)) continue;
+        if (!name.Culture.Equals(reference.Culture, StringComparison.OrdinalIgnoreCase)) continue;
+        if (name.HasPublicKey == reference.HasPublicKey)
+        {
+          if (name.PublicKey != null && !name.PublicKey.SequenceEqual(reference.PublicKey)) continue;
+        }
+
+        if (name.PublicKeyToken == null && reference.PublicKeyToken == null) return assembly;
+        if (name.PublicKeyToken.Length == 0 && reference.PublicKeyToken.Length == 0) return assembly;
+        if (name.PublicKeyToken.SequenceEqual(reference.PublicKeyToken)) return assembly;
+      }
+      return null;
+    }
+
+    private AssemblyDefinition TryResolveAssembly(object sender, AssemblyNameReference reference)
+    {
+      Debug.WriteLine("Trying to resolve assembly: '{0}'", reference.FullName);
+      // try to resolve assembly from cache
+      var definition = ApplicationModel.Current.AssemblyCache.Assemblies.FirstOrDefault(a => a.FullName == reference.FullName);
+
+      // try to resolve assembly with higher version from cache (often used for "mscorlib")
+      if (definition == null)
+        definition = TryResolveHigherVersionAssembly(reference);
+
+      // ask user to resolve assembly manually
+      if (definition == null)
+      {
+        AutoResetEvent requestProcessed = new AutoResetEvent(false);
+
+        Dispatcher.BeginInvoke(() =>
+        {
+          var dialog = new AssemblyFileSelector(reference)
+          {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Bottom,
+          };
+          dialog.Closed += (s, e) =>
+          {
+            definition = dialog.Definition;
+            if (definition == null)
+            {
+              //if (Debugger.IsAttached) Debugger.Break();
+              // TODO: decide what to do here...
+              // The corresponding IL generator should catch an exception and skip writing the code for failed section
+            }
+            requestProcessed.Set();
+          };
+          dialog.Show();
+        });
+
+        requestProcessed.WaitOne();
+      }
+
+      return definition;
+    }
+
+    // TODO: needs rewriting
+    private static string GetCode(object source)
+    {
+      if (ApplicationModel.Current.CurrentLanguage == LanguageInfoList.CSharp)
+      {       
+        return GetCSharpCode(source);
+      }      
+      
+      return GetILCode(source);
+    }
+
+    private static string GetCSharpCode(object source)
+    {
+      var output = new ICSharpCode.Decompiler.PlainTextOutput();
+      var language = Model.Languages.GetLanguage("C#");
+      var shortDecompile = new Model.DecompilationOptions { FullDecompilation = false };
+      var fullDecompile = new Model.DecompilationOptions { FullDecompilation = true };
+
+      var assembly = source as AssemblyDefinition;
+      if (assembly != null)
+      {
+        language.DecompileAssembly(assembly, "", output, shortDecompile);
+        return output.ToString();
+      }
+
+      var ns = source as NamespaceDefinition;
+      if (ns != null)
+      {
+        //writer.WriteNamespace(ns, output, null);
+        //return output.ToString();
+        return "NOT IMPLEMENTED YET";
+      }
+
+      var module = source as ModuleDefinition;
+      if (module != null)
+      {
+        //writer.WriteModule(module, output, null);
+        //return output.ToString();
+        return "NOT IMPLEMENTED YET";
+      }
+
+      var type = source as TypeDefinition;
+      if (type != null)
+      {
+        language.DecompileType(type, output, fullDecompile);        
+        return output.ToString();
+      }
+
+      var method = source as MethodDefinition;
+      if (method != null)
+      {
+        language.DecompileMethod(method, output, fullDecompile);
+        return output.ToString();
+      }
+
+      var property = source as PropertyDefinition;
+      if (property != null)
+      {
+        language.DecompileProperty(property, output, fullDecompile);
+        return output.ToString();
+      }
+
+      var field = source as FieldDefinition;
+      if (field != null)
+      {
+        language.DecompileField(field, output, fullDecompile);
+        return output.ToString();
+      }
+
+      var @event = source as EventDefinition;
+      if (@event != null)
+      {
+        language.DecompileEvent(@event, output, fullDecompile);
+        return output.ToString();
+      }
+
+      return "NOT IMPLEMENTED YET";
+    }
+
+    // TODO: needs rewriting
+    private static string GetILCode(object source)
+    {
+      var output = new PlainTextCodeOutput();
+      var writer = new ILCodeWriter();
+     
+      var assembly = source as AssemblyDefinition;
+      if (assembly != null)
+      {
+        writer.WriteAssembly(assembly, output, null);
+        return output.ToString();        
+      }
+
+      var ns = source as NamespaceDefinition;
+      if (ns != null)
+      {
+        writer.WriteNamespace(ns, output, null);
+        return output.ToString();
+      }
+
+      var module = source as ModuleDefinition;
+      if (module != null)
+      {
+        writer.WriteModule(module, output, null);
+        return output.ToString();
+      }
+
+      var type = source as TypeDefinition;
+      if (type != null)
+      {
+        writer.WriteType(type, output, new DecompilerOptions { FullDecompilation = true });
+        return output.ToString();
+      }
+
+      var method = source as MethodDefinition;
+      if (method != null)
+      {
+        writer.WriteMethod(method, output, new DecompilerOptions { FullDecompilation = true });
+        return output.ToString();
+      }
+
+      var property = source as PropertyDefinition;
+      if (property != null)
+      {
+        writer.WriteProperty(property, output, null);
+        return output.ToString();
+      }
+
+      var field = source as FieldDefinition;
+      if (field != null)
+      {
+        writer.WriteField(field, output, null);
+        return output.ToString();
+      }
+
+      var @event = source as EventDefinition;
+      if (@event != null)
+      {
+        writer.WriteEvent(@event, output, null);
+        return output.ToString();
+      }
+
+      return string.Empty;
+    }
+    
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+      //LoadingAssembliesIndicator.IsBusy = true;
+
+      ThreadPool.QueueUserWorkItem((state) =>
+      {
+        //Thread.Sleep(1 * 1000);       
+
+        Dispatcher.BeginInvoke(() =>
+        {
+          foreach (var assemblyName in StorageService.EnumerateAssemblyCache())
+          {
+            using (var stream = StorageService.OpenCachedAssembly(assemblyName))
+            {
+              try
+              {
+                var definition = AssemblyDefinition.ReadAssembly(stream);
+                //LoadAssembly(definition);
+                ApplicationModel.Current.AssemblyCache.AddAssembly(definition);
+              }
+              catch (Exception ex)
+              {
+                Debug.WriteLine(ex.Message);
+              }
+            }
+          }
+
+          //LoadingAssembliesIndicator.IsBusy = false;
+        });
+      });
+    }
+
+    [Obsolete("Temporary")]
+    private void SelectMethod(MethodDefinition definition)
+    {
+      /*
+      var runtimeView = definition.DeclaringType.Module.Assembly.IsSilverlight() ? runtimeSilverlightView : runtimeNetView;
+      var assemblyView = runtimeView.Items.OfType<TreeViewItem>()
+        .FirstOrDefault(item => item.Tag is AssemblyDefinition && (item.Tag as AssemblyDefinition).FullName == definition.DeclaringType.Module.Assembly.FullName);
+      var moduleView = assemblyView.Items[0] as TreeViewItem;
+      var namespaceView = moduleView.Items.OfType<TreeViewItem>()
+        .FirstOrDefault(item => item.Tag != null && item.Tag.Equals(definition.DeclaringType.Namespace));
+      var typeView = namespaceView.Items.OfType<EntityView>()
+        .FirstOrDefault(item => item.Component is TypeDefinition && (item.Component as TypeDefinition).FullName == definition.DeclaringType.FullName);
+
+      if (!typeView.IsLoaded)
+        typeView.LoadData();
+
+      var methodView = typeView.Items.OfType<TreeViewItem>()
+        .FirstOrDefault(item => item.Tag is MethodDefinition && (item.Tag as MethodDefinition).FullName == definition.FullName);
+
+      AssembliesTree.SetSelectedContainer(methodView);      
+      AssembliesTree.ExpandPath(runtimeView, assemblyView, moduleView, namespaceView, typeView, methodView);
+      ShowCode(methodView);        
+      */
+    }
+
+    private void OnNavigateCodeUriClick(object sender, RoutedEventArgs e)
+    {
+      //string codeUri = "code://ClassLibrary1:1.0.0.0/ClassLibrary1.GenericClass3<,,>/GenericMethod2<>(<!!0>,String)";
+      if (string.IsNullOrWhiteSpace(CodeUri.Text)) return;
+      var method = ApplicationModel.Current.FindMethodDefinition(new Uri(CodeUri.Text, UriKind.Absolute));
+      if (method != null) SelectMethod(method);
+    }
+  }
+}
