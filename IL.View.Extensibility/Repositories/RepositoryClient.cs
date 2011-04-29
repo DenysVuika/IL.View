@@ -22,47 +22,32 @@
  * THE SOFTWARE.
  * */
 
+using System;
+using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Navigation;
-using IL.View.Model;
+using Mono.Cecil;
 
-namespace IL.View.Views
+namespace IL.View.Repositories
 {
-  public partial class Settings : Page
+  public class RepositoryClient : DependencyObject
   {
-    private RepositorySettings _repositorySettings;
-
-    public Settings()
+    public static string GetRepositoryAddress(AssemblyDefinition definition)
     {
-      InitializeComponent();
-      _repositorySettings = Resources["RepositorySettings"] as RepositorySettings;
+      if (definition == null) throw new ArgumentNullException("definition");
+
+      var builder = new StringBuilder();
+      builder.AppendFormat("/{0}/", definition.MainModule.Architecture.ToString());
+      if (definition.IsSilverlight())
+        builder.Append("Silverlight");
+      else
+        builder.Append(definition.MainModule.Runtime.ToString());
+      builder.AppendFormat("/assembly?name={0}", definition.Name.Name);
+      builder.AppendFormat("&version={0}", definition.Name.Version.ToString());
+      builder.AppendFormat("&token={0}", definition.Name.GetPublicTokenKeyString());
+      builder.Append("&specificversion=false");
+
+      string result = builder.ToString();
+      return result;
     }
-
-    // Executes when the user navigates to this page.
-    protected override void OnNavigatedTo(NavigationEventArgs e)
-    {
-    }
-
-    private void OnAddRepositoryClick(object sender, RoutedEventArgs e)
-    {
-      string address = RepositoryAddress.Text;
-      if (string.IsNullOrWhiteSpace(address)) return;
-
-      if (_repositorySettings.AddRepository(address))
-        RepositoryAddress.Text = string.Empty;
-    }
-
-    private void OnRemoveEntryClick(object sender, RoutedEventArgs e)
-    {
-      var menuItem = sender as MenuItem;
-      if (menuItem == null) return;
-
-      var definition = menuItem.DataContext as RepositoryDefinition;
-      if (definition == null) return;
-
-      _repositorySettings.Definitions.Remove(definition);
-    }
-
   }
 }

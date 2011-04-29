@@ -5,9 +5,14 @@
   xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation"
   xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
   xmlns:model="clr-namespace:IL.View.Model"
+  xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
   Style="{StaticResource PageStyle}"
   Title="Settings Page">
-  
+
+  <navigation:Page.Resources>
+    <model:RepositorySettings x:Key="RepositorySettings"/>
+  </navigation:Page.Resources>
+
   <navigation:Page.DataContext>
     <model:AssemblyBrowserSettings/>
   </navigation:Page.DataContext>
@@ -15,8 +20,8 @@
   <Grid x:Name="LayoutRoot">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
-      <RowDefinition Height="*"/>      
-    </Grid.RowDefinitions>    
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
     <TextBlock x:Name="HeaderText" Grid.Row="0" Style="{StaticResource HeaderTextStyle}" Text="Settings" />
     <sdk:TabControl Grid.Row="1">
       <sdk:TabItem Header="Assembly Browser">
@@ -27,6 +32,40 @@
         </StackPanel>
       </sdk:TabItem>
       <sdk:TabItem Header="Disassembler"/>
+      <sdk:TabItem Header="Repositories">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+          </Grid.RowDefinitions>
+
+          <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="RepositoryAddress" Grid.Column="0" Height="25" Style="{StaticResource DarkTextBox}"/>
+            <Button Grid.Column="1" Content="Add" Click="OnAddRepositoryClick" Height="25" Margin="2,0,0,0"/>
+          </Grid>
+
+          <ListBox Grid.Row="1" 
+                   ItemsSource="{Binding Path=Definitions, Source={StaticResource RepositorySettings}}"                    
+                   Margin="0,5,0,0">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <StackPanel>
+                  <toolkit:ContextMenuService.ContextMenu>
+                    <toolkit:ContextMenu>
+                      <toolkit:MenuItem Header="Remove entry" Click="OnRemoveEntryClick"/>
+                    </toolkit:ContextMenu>
+                  </toolkit:ContextMenuService.ContextMenu>
+                  <TextBlock Text="{Binding Address}"/>
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </sdk:TabItem>
     </sdk:TabControl>
   </Grid>
 </navigation:Page>

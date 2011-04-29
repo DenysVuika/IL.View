@@ -22,47 +22,26 @@
  * THE SOFTWARE.
  * */
 
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Navigation;
-using IL.View.Model;
+using System.Text;
 
-namespace IL.View.Views
+namespace Mono.Cecil
 {
-  public partial class Settings : Page
+  public static class AssemblyNameDefinitionServices
   {
-    private RepositorySettings _repositorySettings;
-
-    public Settings()
+    public static string GetPublicTokenKeyString(this AssemblyNameDefinition definition)
     {
-      InitializeComponent();
-      _repositorySettings = Resources["RepositorySettings"] as RepositorySettings;
+      var builder = new StringBuilder();
+
+      if (definition.PublicKeyToken != null && definition.PublicKeyToken.Length > 0)
+      {
+        foreach (var b in definition.PublicKeyToken)
+        {
+          builder.Append(Utils.PKeyTokenHex[b / 16 & Utils.PKeyTokenMask]);
+          builder.Append(Utils.PKeyTokenHex[b & Utils.PKeyTokenMask]);
+        }
+      }
+
+      return (builder.Length > 0) ? builder.ToString() : "null";
     }
-
-    // Executes when the user navigates to this page.
-    protected override void OnNavigatedTo(NavigationEventArgs e)
-    {
-    }
-
-    private void OnAddRepositoryClick(object sender, RoutedEventArgs e)
-    {
-      string address = RepositoryAddress.Text;
-      if (string.IsNullOrWhiteSpace(address)) return;
-
-      if (_repositorySettings.AddRepository(address))
-        RepositoryAddress.Text = string.Empty;
-    }
-
-    private void OnRemoveEntryClick(object sender, RoutedEventArgs e)
-    {
-      var menuItem = sender as MenuItem;
-      if (menuItem == null) return;
-
-      var definition = menuItem.DataContext as RepositoryDefinition;
-      if (definition == null) return;
-
-      _repositorySettings.Definitions.Remove(definition);
-    }
-
   }
 }

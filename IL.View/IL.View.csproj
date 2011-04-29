@@ -95,6 +95,7 @@
     <Reference Include="System.Windows.Browser" />
     <Reference Include="System.Windows.Controls" />
     <Reference Include="System.Windows.Controls.Navigation" />
+    <Reference Include="System.Xml.Linq, Version=2.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
@@ -125,6 +126,7 @@
     <Compile Include="Model\CSharpLanguage.cs" />
     <Compile Include="Model\FormattingUtils.cs" />
     <Compile Include="Model\LanguageInfo.cs" />
+    <Compile Include="Model\RepositorySettings.cs" />
     <Compile Include="Model\StorageService.cs" />
     <Compile Include="Model\ContextMenuBuilder.cs" />
     <Compile Include="Views\About.xaml.cs">

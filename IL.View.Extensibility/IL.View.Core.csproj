@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BrowserCommandAttribute.cs" />
+    <Compile Include="Cecil\AssemblyNameDefinitionServices.cs" />
     <Compile Include="Cecil\CodeUriServices.cs" />
     <Compile Include="Cecil\CustomAttributeServices.cs" />
     <Compile Include="Cecil\FieldDefinitionServices.cs" />
@@ -117,6 +118,7 @@
     <Compile Include="Decompiler\PlainTextCodeOutput.cs" />
     <Compile Include="Cecil\NamespaceDefinition.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Repositories\RepositoryClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="Assets\CodeView.xaml">
