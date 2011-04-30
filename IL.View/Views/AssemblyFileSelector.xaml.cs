@@ -134,7 +134,7 @@ namespace IL.View.Views
         return;
       }
 
-      string fileName = Path.Combine(definition.Name.Name, ".dll");
+      string fileName = definition.Name.Name + ".dll";
 
       // TODO: take into account partial trust in-browser mode
       
