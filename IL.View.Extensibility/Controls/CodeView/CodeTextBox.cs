@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using IL.View.Decompiler;
 
 namespace IL.View.Controls.CodeView
 {
@@ -10,6 +11,9 @@ namespace IL.View.Controls.CodeView
   public class CodeTextBox : Control, ICodeView
   {
     private static readonly Type ThisType = typeof(CodeTextBox);
+
+    public DecompileTask CurrentTask { get; set; }
+
     /// <summary>
     /// Shared static color coding system instance.
     /// </summary>

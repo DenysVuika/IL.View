@@ -22,24 +22,57 @@
  * THE SOFTWARE.
  * */
 
+using System;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using IL.View.Model;
+using IL.View.Repositories;
 using Mono.Cecil;
 
 namespace IL.View.Views
 {
   public partial class AssemblyFileSelector : ChildWindow
   {
+    private AssemblyDefinition _callingAssembly;
+
     public AssemblyDefinition Definition { get; private set; }
     private readonly AssemblyNameReference _reference;
+    private string _repository;
+    private RepositoryClient _repositoryClient = new RepositoryClient();
 
-    public AssemblyFileSelector(AssemblyNameReference reference)
+    public AssemblyFileSelector(AssemblyDefinition callingAssembly, AssemblyNameReference reference)
     {
+      if (callingAssembly == null) throw new ArgumentNullException("callingAssembly");
+      _callingAssembly = callingAssembly;
+
       InitializeComponent();
       _reference = reference;
       DataContext = reference;
+
+      var resolver = new RepositoryAssemblySearch(
+        RepositorySettings.Current.Definitions.Select(d => d.Address).ToArray(),
+        callingAssembly,
+        reference,
+        OnAssemblySearchComplete);
+      resolver.Start();
+    }
+
+    private void OnAssemblySearchComplete(string repository, bool result)
+    {
+      if (result)
+      {
+        _repository = repository;
+        RemoteCheckLabel.Text = "Assembly can be downloaded from repository.";
+      }
+      else
+      {
+        spRemoteRepositories.Visibility = Visibility.Collapsed;
+      }
+      RemoteCheckProgress.IsIndeterminate = false;
+      DownloadButton.Visibility = result ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -73,6 +106,47 @@ namespace IL.View.Views
         DialogResult = true;
       }
     }
+
+    private void OnDownloadAssemblyClick(object sender, RoutedEventArgs e)
+    {
+      if (string.IsNullOrWhiteSpace(_repository)) return;
+
+      BrowseButton.IsEnabled = false;
+      DownloadButton.IsEnabled = false;
+      RemoteCheckLabel.Text = "Downloading assembly...";
+      RemoteCheckProgress.IsIndeterminate = true;
+
+      _repositoryClient.GetAssembly(_repository, _callingAssembly, _reference, OnAssemblyDownloaded);
+    }
+
+    private void OnAssemblyDownloaded(Stream data)
+    {
+      RemoteCheckProgress.IsIndeterminate = false;
+
+      if (data == null || data.Length == 0) return;
+
+      var definition = AssemblyDefinition.ReadAssembly(data, new ReaderParameters(ReadingMode.Immediate));
+      if (definition == null || !definition.FullName.Equals(_reference.FullName, StringComparison.OrdinalIgnoreCase))
+      {
+        RemoteCheckLabel.Text = "Failed to download assembly.";
+        BrowseButton.IsEnabled = true;
+        DownloadButton.IsEnabled = true;
+        return;
+      }
+
+      string fileName = Path.Combine(definition.Name.Name, ".dll");
+
+      // TODO: take into account partial trust in-browser mode
+      
+      if (Definition.IsSilverlight())
+        StorageService.CacheSilverlightAssembly(fileName, data);
+      else
+        StorageService.CacheNetAssembly(fileName, data);
+      
+      ApplicationModel.Current.AssemblyCache.AddAssembly(definition);
+
+      Definition = definition;
+      DialogResult = true;
+    }
   }
 }
-

@@ -119,7 +119,7 @@ namespace IL.View.Controls
     {
       if (e.Key == Key.Space)
       {
-        DecompilerManager.RequestCodeDisassembly(Component);
+        DecompilerManager.RequestCodeDisassembly(DeclaringAssembly, Component);
         e.Handled = true;
         return;
       }

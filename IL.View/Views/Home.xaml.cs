@@ -46,6 +46,16 @@ namespace IL.View
     private Queue<FileInfo> _pendingDownloads = new Queue<FileInfo>();
     private BusyIndicatorContext _busyContext = new BusyIndicatorContext();
 
+    [Obsolete("Temporary solution until Mono.Cecil enhancements are applied")]
+    // TODO: this approach is not thread-safe!
+    private DecompileTask _decompileTask;
+
+    [Obsolete("Temporary solution until Mono.Cecil enhancements are applied")]
+    private void SetDecompileTask(DecompileTask task)
+    {
+      _decompileTask = task;
+    }
+
     [Import]
     public DecompilerManager DecompilerManager { get; set; }
 
@@ -102,17 +112,23 @@ namespace IL.View
     }
 
     private void OnCodeDisassemblyRequested(object sender, DecompileRequestEventArgs e)
-    {      
+    {
+      if (_decompileTask != null)
+      {
+        // new thread will corrupt previous task info!
+        if (Debugger.IsAttached) Debugger.Break();
+      }
+
       DisassembleProgress.IsBusy = true;
-      var task = new DecompileTask(SourceView, e.Target);
+      var task = new DecompileTask(SourceView, e.CallingAssembly, e.Target);
       Thread thread = new Thread(new ParameterizedThreadStart(DoShowCode));
       thread.Start(task);
     }
 
     private void OnCurrentLanguageChanged(object sender, EventArgs e)
     {
-      if (SourceView.Tag != null)
-        DecompilerManager.RequestCodeDisassembly(SourceView.Tag);
+      if (SourceView.CurrentTask != null)
+        DecompilerManager.RequestCodeDisassembly(SourceView.CurrentTask.CallingAssembly, SourceView.CurrentTask.Source);
     }
 
     // Queue the FileInfo objects representing dropped files
@@ -251,7 +267,7 @@ namespace IL.View
       {
         var node = e.NewValue as TreeNode;
         if (node == null) return;
-        Dispatcher.BeginInvoke(() => DecompilerManager.RequestCodeDisassembly(node.Component));
+        Dispatcher.BeginInvoke(() => DecompilerManager.RequestCodeDisassembly(node.DeclaringAssembly, node.Component));
       }      
     }
 
@@ -262,7 +278,14 @@ namespace IL.View
 
     private void DoShowCode(object parameter)
     {
+      if (_decompileTask != null)
+      {
+        // trying access already running task!
+        if (Debugger.IsAttached) Debugger.Break();
+      }
+
       var task = parameter as DecompileTask;
+      SetDecompileTask(task);
 
       AssemblyResolver.ResolveFailure += TryResolveAssembly;
       string code = GetCode(task.Source);
@@ -275,14 +298,13 @@ namespace IL.View
         else
           SourceView.SourceLanguage = SourceLanguageType.IL;
 
-        task.View.SourceCode = code;
-        task.View.Tag = task.Source;
-
+        task.View.SourceCode = code;        
         DisassembleProgress.IsBusy = false;
+        SetDecompileTask(null);
       });
     }
 
-    private AssemblyDefinition TryResolveHigherVersionAssembly(AssemblyNameReference reference)
+    private AssemblyDefinition TryResolveHigherVersionAssembly(AssemblyDefinition callingAssembly, AssemblyNameReference reference)
     {
       foreach (var assembly in ApplicationModel.Current.AssemblyCache.Assemblies)
       {
@@ -303,14 +325,20 @@ namespace IL.View
     }
 
     private AssemblyDefinition TryResolveAssembly(object sender, AssemblyNameReference reference)
-    {
+    {      
+      if (_decompileTask == null)
+      {
+        // trying to access missing task/calling assembly
+        if (Debugger.IsAttached) Debugger.Break();
+      }
+
       Debug.WriteLine("Trying to resolve assembly: '{0}'", reference.FullName);
       // try to resolve assembly from cache
       var definition = ApplicationModel.Current.AssemblyCache.Assemblies.FirstOrDefault(a => a.FullName == reference.FullName);
 
       // try to resolve assembly with higher version from cache (often used for "mscorlib")
       if (definition == null)
-        definition = TryResolveHigherVersionAssembly(reference);
+        definition = TryResolveHigherVersionAssembly(_decompileTask.CallingAssembly, reference);
 
       // ask user to resolve assembly manually
       if (definition == null)
@@ -319,7 +347,7 @@ namespace IL.View
 
         Dispatcher.BeginInvoke(() =>
         {
-          var dialog = new AssemblyFileSelector(reference)
+          var dialog = new AssemblyFileSelector(_decompileTask.CallingAssembly, reference)
           {
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Bottom,

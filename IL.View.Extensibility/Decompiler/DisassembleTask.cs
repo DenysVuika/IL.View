@@ -23,6 +23,7 @@
  * */
 
 using IL.View.Controls.CodeView;
+using Mono.Cecil;
 
 namespace IL.View.Decompiler
 {
@@ -30,10 +31,13 @@ namespace IL.View.Decompiler
   {
     public ICodeView View { get; private set; }
     public object Source { get; private set; }
+    public AssemblyDefinition CallingAssembly { get; private set; }
 
-    public DecompileTask(ICodeView view, object source)
+    public DecompileTask(ICodeView view, AssemblyDefinition callingAssembly, object source)
     {
       View = view;
+      View.CurrentTask = this;
+      CallingAssembly = callingAssembly;
       Source = source;
     }
   }

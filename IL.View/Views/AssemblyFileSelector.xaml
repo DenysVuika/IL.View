@@ -184,7 +184,8 @@
       <RowDefinition Height="Auto"/>
       <RowDefinition />
       <RowDefinition Height="Auto"/>
-      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
 
     <TextBlock Grid.Row="0" Text="The following assembly name could not be resolved automatically:" Foreground="Black"/>
@@ -204,7 +205,16 @@
 
     <TextBlock Grid.Row="2" Text="Please select the assembly file manually." Margin="0,8,0,0" Foreground="Black"/>
 
-    <Button x:Name="CancelButton" Content="Skip" Click="CancelButton_Click" Width="75" HorizontalAlignment="Right" Margin="0,12,0,0" Grid.Row="3" />
-    <Button x:Name="BrowseButton" Content="Browse..." Click="BrowseAssembly" Width="75" HorizontalAlignment="Right" Margin="0,12,79,0" Grid.Row="3" />
+    <StackPanel x:Name="spRemoteRepositories" Grid.Row="3" Margin="0,10">
+      <TextBlock x:Name="RemoteCheckLabel" Text="Checking remote repositories..." Foreground="Black"/>
+      <ProgressBar x:Name="RemoteCheckProgress" Grid.Row="3" IsIndeterminate="True" Height="14"/>
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" Grid.Row="4" HorizontalAlignment="Right" Margin="0,12,0,0">
+      <Button x:Name="DownloadButton" Content="Download" Click="OnDownloadAssemblyClick" Visibility="Collapsed"  MinWidth="95"/>
+      <Button x:Name="BrowseButton" Content="Browse..." Click="BrowseAssembly" MinWidth="95" Margin="4,0,0,0" />
+      <Button x:Name="CancelButton" Content="Skip" Click="CancelButton_Click" MinWidth="95" Margin="4,0,0,0"/>
+    </StackPanel>
+    
   </Grid>
 </controls:ChildWindow>

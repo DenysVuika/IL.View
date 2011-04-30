@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using IL.View.Decompiler;
 
 namespace IL.View.Controls.CodeView
 {
@@ -11,6 +12,8 @@ namespace IL.View.Controls.CodeView
   public class CodeTextBlock : Control, ICodeView
   {
     private static readonly Type ThisType = typeof(CodeTextBlock);
+
+    public DecompileTask CurrentTask { get; set; }
 
     /// <summary>
     /// Shared static color coding system instance.

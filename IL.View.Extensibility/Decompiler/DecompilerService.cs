@@ -22,8 +22,9 @@
  * THE SOFTWARE.
  * */
 
-using System.ComponentModel.Composition;
 using System;
+using System.ComponentModel.Composition;
+using Mono.Cecil;
 
 namespace IL.View.Decompiler
 {
@@ -32,11 +33,11 @@ namespace IL.View.Decompiler
   {
     public event EventHandler<DecompileRequestEventArgs> CodeDisassemblyRequested;
 
-    public void RequestCodeDisassembly(object target)
+    public void RequestCodeDisassembly(AssemblyDefinition callingAssembly, object target)
     {
       if (target == null) return;
       var handler = CodeDisassemblyRequested;
-      if (handler != null) handler(this, new DecompileRequestEventArgs(target));
+      if (handler != null) handler(this, new DecompileRequestEventArgs(callingAssembly, target));
     }   
   }
 }

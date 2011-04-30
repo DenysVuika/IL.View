@@ -23,15 +23,18 @@
  * */
 
 using System;
+using Mono.Cecil;
 
 namespace IL.View.Decompiler
 {
   public class DecompileRequestEventArgs : EventArgs
   {
+    public AssemblyDefinition CallingAssembly { get; private set; }
     public object Target { get; private set; }
 
-    public DecompileRequestEventArgs(object target)
+    public DecompileRequestEventArgs(AssemblyDefinition callingAssembly, object target)
     {
+      CallingAssembly = callingAssembly;
       Target = target;
     }
   }

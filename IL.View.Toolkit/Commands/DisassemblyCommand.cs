@@ -28,6 +28,7 @@ using System.Windows.Input;
 using IL.View.Decompiler;
 using IL.View.Extensibility;
 using Mono.Cecil;
+using System.Diagnostics;
 
 namespace IL.View.Toolkit.Commands
 {
@@ -45,7 +46,9 @@ namespace IL.View.Toolkit.Commands
 
     public void Execute(object parameter)
     {
-      DecompilerManager.RequestCodeDisassembly(parameter);
+      if (Debugger.IsAttached) Debugger.Break();
+      // TODO: Provide calling assembly
+      DecompilerManager.RequestCodeDisassembly(null, parameter);
     }
   }
 

@@ -50,6 +50,11 @@ namespace IL.View.Model
 
   public class RepositorySettings : INotifyPropertyChanged
   {
+    public static RepositorySettings Current
+    {
+      get { return new RepositorySettings(); }
+    }
+
     public bool AutoSave { get; set; }
 
     private ObservableCollection<RepositoryDefinition> _definitions = new ObservableCollection<RepositoryDefinition>();
