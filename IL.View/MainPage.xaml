@@ -43,6 +43,7 @@
       <Border x:Name="BrandingBorder" Style="{StaticResource NavBrandingBorderStyle}" Grid.Row="1">
         <StackPanel x:Name="BrandingStackPanel" Style="{StaticResource NavBrandingStackPanelStyle}">
           <TextBlock x:Name="ApplicationNameTextBlock" Style="{StaticResource ApplicationNameStyle}" Text="IL.View" />
+          <TextBlock Text="(beta)" Style="{StaticResource ApplicationNameStyle}" FontSize="{StaticResource Heading6FontSize}" Margin="0,10,0,0"/>
           <ContentControl Style="{StaticResource NavLogoIcon}" VerticalAlignment="Bottom" />
         </StackPanel>
       </Border>

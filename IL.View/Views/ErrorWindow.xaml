@@ -12,12 +12,12 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="IntroductoryText" Grid.Row="0" Margin="0" 
+        <TextBlock x:Name="IntroductoryText" Grid.Row="0" Margin="0" Foreground="Black"
                Text="An unknown error was encountered. Please contact your administrator for more information."/>
 
         <StackPanel x:Name="ContentStackPanel" Grid.Row="2" Margin="0,6,0,0">
 
-            <TextBlock x:Name="LabelText" TextWrapping="Wrap" Margin="0,0,0,2" 
+            <TextBlock x:Name="LabelText" TextWrapping="Wrap" Margin="0,0,0,2" Foreground="Black"
                        Text="Error details"/>
             <TextBox x:Name="ErrorTextBox" Height="90" TextWrapping="Wrap" IsReadOnly="True"
                      VerticalScrollBarVisibility="Auto"/>

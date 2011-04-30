@@ -23,14 +23,20 @@
  * */
 
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
+using System.Windows;
 
 namespace IL.View.Model
 {
   // File system access facade.
   public class StorageService
   {
+    private static bool IsEnabled
+    {
+      get { return Application.Current.HasElevatedPermissions; }
+    }
+
     private static string GetApplicationFolder()
     {
       var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -75,22 +81,25 @@ namespace IL.View.Model
 
     public static void CacheSilverlightAssembly(string name, Stream data)
     {
-      CacheAssembly(Path.Combine(GetSilverilghtCacheFolder(), name), data);
+      if (IsEnabled) CacheAssembly(Path.Combine(GetSilverilghtCacheFolder(), name), data);
     }
 
     public static void CacheNetAssembly(string name, Stream data)
     {
-      CacheAssembly(Path.Combine(GetNetCacheFolder(), name), data);
+      if (IsEnabled) CacheAssembly(Path.Combine(GetNetCacheFolder(), name), data);
     }
 
     public static IEnumerable<string> EnumerateAssemblyCache()
     {
+      if (!IsEnabled) yield break;
+
       foreach (var path in Directory.EnumerateFiles(GetAssemblyCacheFolder(), "*.dll", SearchOption.AllDirectories))
         yield return path;
     }
 
     public static Stream OpenCachedAssembly(string path)
     {
+      if (!IsEnabled) return null;
       return File.Exists(path) ? File.OpenRead(path) : null;
     }
   }

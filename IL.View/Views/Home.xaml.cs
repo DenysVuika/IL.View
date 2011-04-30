@@ -158,9 +158,7 @@ namespace IL.View
           var fileInfo = _pendingDownloads.Dequeue();
 
           Dispatcher.BeginInvoke(() => { _busyContext.ItemLabel = fileInfo.Name; });
-
-          //Thread.Sleep(10000);
-
+                    
           try
           {
             var assembly = AssemblyDefinition.ReadAssembly(fileInfo.OpenRead());
@@ -173,6 +171,7 @@ namespace IL.View
           catch (Exception ex)
           {
             Debug.WriteLine(ex.Message);
+            Dispatcher.BeginInvoke(() => new ErrorWindow(ex).Show());
           }
         }
 
