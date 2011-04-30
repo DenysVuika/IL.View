@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IL.View.Core", "IL.View.Ext
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IL.View.Toolkit", "IL.View.Toolkit\IL.View.Toolkit.csproj", "{5D431240-89FE-4EA1-874A-9C932A965FE8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{C0CCF4B8-F150-401D-8870-F2F100A2AF1B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IL.View.Repository", "IL.View.Repository\IL.View.Repository.csproj", "{878EC98F-24D4-48C8-8A7A-9B0F56044906}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,8 +35,16 @@ Global
 		{5D431240-89FE-4EA1-874A-9C932A965FE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D431240-89FE-4EA1-874A-9C932A965FE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D431240-89FE-4EA1-874A-9C932A965FE8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{878EC98F-24D4-48C8-8A7A-9B0F56044906}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{878EC98F-24D4-48C8-8A7A-9B0F56044906}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{878EC98F-24D4-48C8-8A7A-9B0F56044906}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{878EC98F-24D4-48C8-8A7A-9B0F56044906}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9041F7E4-8B2A-4642-88D3-CDAE3BADC6B6} = {C0CCF4B8-F150-401D-8870-F2F100A2AF1B}
+		{878EC98F-24D4-48C8-8A7A-9B0F56044906} = {C0CCF4B8-F150-401D-8870-F2F100A2AF1B}
 	EndGlobalSection
 EndGlobal

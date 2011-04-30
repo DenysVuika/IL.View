@@ -52,6 +52,7 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="AssemblyRepository.svc" />
     <Content Include="ClientBin\IL.View.xap" />
     <Content Include="Default.aspx" />
     <Content Include="Default.html" />
@@ -67,7 +68,12 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\IL.View.Repository\IL.View.Repository.csproj">
+      <Project>{878EC98F-24D4-48C8-8A7A-9B0F56044906}</Project>
+      <Name>IL.View.Repository</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" />
   <ProjectExtensions>
