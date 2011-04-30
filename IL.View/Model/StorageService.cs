@@ -67,6 +67,7 @@ namespace IL.View.Model
 
     private static void CacheAssembly(string path, Stream data)
     {
+      if (data.CanSeek) data.Seek(0, SeekOrigin.Begin);
       var buffer = new byte[data.Length];
       data.Read(buffer, 0, buffer.Length);
       File.WriteAllBytes(path, buffer);

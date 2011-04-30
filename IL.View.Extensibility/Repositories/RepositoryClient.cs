@@ -23,6 +23,10 @@
  * */
 
 using System;
+using System.Diagnostics;
+using System.IO;
+using System.Net;
+using System.Net.Browser;
 using System.Text;
 using System.Windows;
 using Mono.Cecil;
@@ -31,23 +35,81 @@ namespace IL.View.Repositories
 {
   public class RepositoryClient : DependencyObject
   {
-    public static string GetRepositoryAddress(AssemblyDefinition definition)
+    private static string GetRepositoryAddress(AssemblyDefinition callingAssembly, AssemblyNameReference reference)
     {
-      if (definition == null) throw new ArgumentNullException("definition");
-
       var builder = new StringBuilder();
-      builder.AppendFormat("/{0}/", definition.MainModule.Architecture.ToString());
-      if (definition.IsSilverlight())
+      builder.AppendFormat("/{0}/", callingAssembly.MainModule.Architecture.ToString());
+      if (reference.HasSilverlightToken() || callingAssembly.IsSilverlight())
         builder.Append("Silverlight");
       else
-        builder.Append(definition.MainModule.Runtime.ToString());
-      builder.AppendFormat("/assembly?name={0}", definition.Name.Name);
-      builder.AppendFormat("&version={0}", definition.Name.Version.ToString());
-      builder.AppendFormat("&token={0}", definition.Name.GetPublicTokenKeyString());
+        builder.Append(callingAssembly.MainModule.Runtime.ToString());
+      builder.AppendFormat("/assembly?name={0}", reference.Name);
+      builder.AppendFormat("&version={0}", reference.Version.ToString());
+      builder.AppendFormat("&token={0}", reference.GetPublicTokenKeyString());
       builder.Append("&specificversion=false");
 
-      string result = builder.ToString();
-      return result;
+      return builder.ToString();
+    }
+
+    public void CheckAssembly(string repository, AssemblyDefinition callingAssembly, AssemblyNameReference reference, Action<bool> callback)
+    {
+      if (string.IsNullOrWhiteSpace(repository)) throw new ArgumentNullException("repository");
+      if (callingAssembly == null) throw new ArgumentNullException("callingAssembly");
+      if (reference == null) throw new ArgumentNullException("reference");
+      if (callback == null) throw new ArgumentNullException("callback");
+
+      repository = repository.TrimEnd('/') + "/verify";
+
+      var uriString = GetRepositoryAddress(callingAssembly, reference);
+      var uri = new Uri(repository + uriString, UriKind.RelativeOrAbsolute);
+      var request = (HttpWebRequest)WebRequestCreator.ClientHttp.Create(uri);
+      request.Method = "GET";
+      request.BeginGetResponse(r =>
+      {
+        try
+        {
+          var rs = (HttpWebResponse)request.EndGetResponse(r);
+          if (rs != null && rs.StatusCode == HttpStatusCode.OK)
+            Dispatcher.BeginInvoke(() => callback(true));
+        }
+        catch (WebException ex)
+        {
+          Debug.WriteLine(ex.Message);
+          Dispatcher.BeginInvoke(() => callback(false));
+        }
+
+      }, request);
+    }
+
+    public void GetAssembly(string repository, AssemblyDefinition callingAssembly, AssemblyNameReference reference, Action<Stream> callback)
+    {
+      if (string.IsNullOrWhiteSpace(repository)) throw new ArgumentNullException("repository");
+      if (callingAssembly == null) throw new ArgumentNullException("callingAssembly");
+      if (reference == null) throw new ArgumentNullException("reference");
+      if (callback == null) throw new ArgumentNullException("callback");
+
+      repository = repository.TrimEnd('/');
+
+      var uriString = GetRepositoryAddress(callingAssembly, reference);
+      var uri = new Uri(repository + uriString, UriKind.RelativeOrAbsolute);
+      var request = (HttpWebRequest)WebRequestCreator.ClientHttp.Create(uri);
+      request.Method = "GET";
+      request.BeginGetResponse(r =>
+      {
+        try
+        {
+          var rs = (HttpWebResponse)request.EndGetResponse(r);
+          var stream = rs.GetResponseStream();
+
+          Dispatcher.BeginInvoke(() => callback(stream));
+        }
+        catch (WebException ex)
+        {
+          Debug.WriteLine(ex.Message);
+          Dispatcher.BeginInvoke(() => callback(null));
+        }
+
+      }, request);
     }
   }
 }
