@@ -22,6 +22,7 @@
  * THE SOFTWARE.
  * */
 
+using System;
 using System.Collections.Generic;
 
 namespace Mono.Cecil
@@ -29,6 +30,7 @@ namespace Mono.Cecil
   public class NamespaceDefinition
   {
     public string Name { get; set; }
+    public AssemblyDefinition DeclaringAssembly { get; private set; }
 
     private List<TypeDefinition> _types = new List<TypeDefinition>();
     public List<TypeDefinition> Types
@@ -36,8 +38,10 @@ namespace Mono.Cecil
       get { return _types; }
     }
 
-    public NamespaceDefinition(string name)
+    public NamespaceDefinition(AssemblyDefinition declaringAssembly, string name)
     {
+      if (declaringAssembly == null) throw new ArgumentNullException("declaringAssembly");
+      DeclaringAssembly = declaringAssembly;
       Name = name;
     }
   }

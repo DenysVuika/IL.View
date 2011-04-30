@@ -32,7 +32,12 @@ using IL.View.Model;
 namespace IL.View.Controls
 {
   public class AssemblyNode : TreeNode<AssemblyDefinition>
-  {    
+  {
+    public override AssemblyDefinition DeclaringAssembly
+    {
+      get { return AssociatedObject; }
+    }
+
     public bool IsSilverlight
     {
       get { return AssociatedObject.IsSilverlight(); }
@@ -58,7 +63,7 @@ namespace IL.View.Controls
         {
           var referencesView = new SimpleNode(DefaultImages.AssemblyBrowser.Reference, "References");
           foreach (var reference in module.AssemblyReferences)
-            referencesView.Items.Add(new AssemblyReferenceNode(reference));
+            referencesView.Items.Add(new AssemblyReferenceNode(DeclaringAssembly, reference));
 
           moduleView.Items.Add(referencesView);
         }
@@ -73,7 +78,7 @@ namespace IL.View.Controls
 
           if (!namespaceCache.TryGetValue(type.Namespace, out namespaceView))
           {
-            namespaceView = new NamespaceNode(type.Namespace);
+            namespaceView = new NamespaceNode(DeclaringAssembly, type.Namespace);
             namespaceCache.Add(type.Namespace, namespaceView);
             moduleView.Items.Add(namespaceView);
           }

@@ -30,6 +30,11 @@ namespace IL.View.Controls
 {
   public class MethodNode : TreeNode<MethodDefinition>
   {
+    public override AssemblyDefinition DeclaringAssembly
+    {
+      get { return AssociatedObject.Module.Assembly; }
+    }
+
     public MethodNode(MethodDefinition component)
       : base(component)
     {

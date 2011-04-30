@@ -22,10 +22,17 @@
  * THE SOFTWARE.
  * */
 
+using Mono.Cecil;
+
 namespace IL.View.Controls
 {
   public class SimpleNode : TreeNode
-  {    
+  {
+    public override AssemblyDefinition DeclaringAssembly
+    {
+      get { return null; }
+    }
+
     public SimpleNode(string icon, string header)
       : base(null)
     {

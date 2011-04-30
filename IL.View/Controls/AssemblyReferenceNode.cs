@@ -22,15 +22,28 @@
  * THE SOFTWARE.
  * */
 
+using System;
 using Mono.Cecil;
 
 namespace IL.View.Controls
 {
   public class AssemblyReferenceNode : TreeNode<AssemblyNameReference>
   {
-    public AssemblyReferenceNode(AssemblyNameReference component)
+    private AssemblyDefinition _declaringAssembly;
+
+    public override AssemblyDefinition DeclaringAssembly
+    {
+      get { return _declaringAssembly; }
+    }
+
+    public AssemblyReferenceNode(AssemblyDefinition declaringAssembly, AssemblyNameReference component)
       : base(component)
     {
+      if (declaringAssembly == null) throw new ArgumentNullException("declaringAssembly");
+      if (component == null) throw new ArgumentNullException("component");
+
+      _declaringAssembly = declaringAssembly;
+
       DefaultStyleKey = typeof(AssemblyReferenceNode);
       Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.Reference, null, component.Name, true);
     }

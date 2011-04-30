@@ -32,11 +32,13 @@ using System.Windows.Input;
 using System.Windows.Media;
 using IL.View.Decompiler;
 using IL.View.Model;
+using Mono.Cecil;
 
 namespace IL.View.Controls
 {
   public abstract class TreeNode : TreeViewItem
   {
+    public abstract AssemblyDefinition DeclaringAssembly { get; }
     public virtual bool IsLoaded { get; private set; }
     public object Component { get; private set; }
 
@@ -140,7 +142,7 @@ namespace IL.View.Controls
   }
 
 
-  public class TreeNode<T> : TreeNode where T : class
+  public abstract class TreeNode<T> : TreeNode where T : class
   {
     private readonly TreeViewItem _stubItem = new TreeViewItem { Header = "Loading data..." };
 
@@ -162,7 +164,7 @@ namespace IL.View.Controls
       }
     }
 
-    public TreeNode(T component = null, Action<TreeNode<T>, T> loadHandler = null)
+    protected TreeNode(T component = null, Action<TreeNode<T>, T> loadHandler = null)
       : base(component)
     {
       AssociatedObject = component;

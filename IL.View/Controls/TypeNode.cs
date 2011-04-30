@@ -30,6 +30,11 @@ namespace IL.View.Controls
 {
   public class TypeNode : TreeNode<TypeDefinition>
   {
+    public override AssemblyDefinition DeclaringAssembly
+    {
+      get { return AssociatedObject.Module.Assembly; }
+    }
+
     public TypeNode(TypeDefinition component)
       : base(component)
     {

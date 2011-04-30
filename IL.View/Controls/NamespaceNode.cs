@@ -29,10 +29,14 @@ namespace IL.View.Controls
 {
   public class NamespaceNode : TreeNode<NamespaceDefinition>
   {
-    public NamespaceNode(string name)
-      : this(new NamespaceDefinition(name))
+    public override AssemblyDefinition DeclaringAssembly
     {
+      get { return AssociatedObject.DeclaringAssembly; }
+    }
 
+    public NamespaceNode(AssemblyDefinition declaringAssembly, string name)
+      : this(new NamespaceDefinition(declaringAssembly, name))
+    {
     }
 
     public NamespaceNode(NamespaceDefinition component)

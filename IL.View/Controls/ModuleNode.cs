@@ -29,6 +29,11 @@ namespace IL.View.Controls
 {
   public class ModuleNode : TreeNode<ModuleDefinition>
   {
+    public override AssemblyDefinition DeclaringAssembly
+    {
+      get { return AssociatedObject.Assembly; }
+    }
+
     public ModuleNode(ModuleDefinition component)
       : base(component)
     {

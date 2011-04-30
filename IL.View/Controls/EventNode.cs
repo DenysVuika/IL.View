@@ -28,6 +28,11 @@ namespace IL.View.Controls
 {
   public class EventNode : TreeNode<EventDefinition>
   {
+    public override AssemblyDefinition DeclaringAssembly
+    {
+      get { return AssociatedObject.Module.Assembly; }
+    }
+
     public EventNode(EventDefinition component)
       : base(component)
     {

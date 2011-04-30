@@ -28,6 +28,11 @@ namespace IL.View.Controls
 {
   public class PropertyNode : TreeNode<PropertyDefinition>
   {
+    public override AssemblyDefinition DeclaringAssembly
+    {
+      get { return AssociatedObject.Module.Assembly; }
+    }
+
     public PropertyNode(PropertyDefinition component)
       : base(component)
     {

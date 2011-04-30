@@ -28,6 +28,11 @@ namespace IL.View.Controls
 {
   public class FieldNode : TreeNode<FieldDefinition>
   {
+    public override AssemblyDefinition DeclaringAssembly
+    {
+      get { return AssociatedObject.Module.Assembly; }
+    }
+
     public FieldNode(FieldDefinition component)
       : base(component)
     {
