@@ -113,6 +113,7 @@
     <Compile Include="Controls\SimpleNode.cs" />
     <Compile Include="Controls\TiledBackground.cs" />
     <Compile Include="Controls\TypeNode.cs" />
+    <Compile Include="Controls\XapPackageNode.cs" />
     <Compile Include="DefaultImages.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -249,6 +250,18 @@
       <Project>{5D431240-89FE-4EA1-874A-9C932A965FE8}</Project>
       <Name>IL.View.Toolkit</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\AssemblyBrowser\xap-package-16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\AssemblyBrowser\file-xml-16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\AssemblyBrowser\file-misc-16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\AssemblyBrowser\folder-closed-16.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

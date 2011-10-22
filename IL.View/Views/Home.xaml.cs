@@ -43,6 +43,8 @@ namespace IL.View
 {
   public partial class Home : Page
   {
+    private static readonly string[] KnownExtensions = new[] { ".dll", ".exe", ".xap" };
+
     private Queue<FileInfo> _pendingDownloads = new Queue<FileInfo>();
     private BusyIndicatorContext _busyContext = new BusyIndicatorContext();
 
@@ -121,7 +123,7 @@ namespace IL.View
 
       DisassembleProgress.IsBusy = true;
       var task = new DecompileTask(SourceView, e.CallingAssembly, e.Target);
-      Thread thread = new Thread(new ParameterizedThreadStart(DoShowCode));
+      var thread = new Thread(DoShowCode);
       thread.Start(task);
     }
 
@@ -134,15 +136,17 @@ namespace IL.View
     // Queue the FileInfo objects representing dropped files
     private void LayoutRoot_Drop(object sender, DragEventArgs e)
     {
-      if (e.Data != null)
+      var files = e.Data.GetData(DataFormats.FileDrop) as FileInfo[];
+      if (files == null || files.Length == 0) return;
+
+      foreach (var fi in files)
       {
-        var files = e.Data.GetData(DataFormats.FileDrop) as FileInfo[];
-
-        foreach (FileInfo fi in files)
+        var ext = Path.GetExtension(fi.Name);
+        if (KnownExtensions.Contains(ext))
           _pendingDownloads.Enqueue(fi);
-
-        DownloadPendingAssemblies();
       }
+
+      DownloadPendingAssemblies();
     }
 
     private void DownloadPendingAssemblies()
@@ -161,12 +165,19 @@ namespace IL.View
                     
           try
           {
-            var assembly = AssemblyDefinition.ReadAssembly(fileInfo.OpenRead());
-            if (assembly.IsSilverlight())
-              StorageService.CacheSilverlightAssembly(fileInfo.Name, fileInfo.OpenRead());
+            if (Path.GetExtension(fileInfo.Name) == ".xap")
+            {
+              Dispatcher.BeginInvoke(() => LoadXapPackage(fileInfo));
+            }
             else
-              StorageService.CacheNetAssembly(fileInfo.Name, fileInfo.OpenRead());
-            Dispatcher.BeginInvoke(() => LoadOrReplaceAssembly(assembly));
+            {
+              var assembly = AssemblyDefinition.ReadAssembly(fileInfo.OpenRead());
+              if (assembly.IsSilverlight())
+                StorageService.CacheSilverlightAssembly(fileInfo.Name, fileInfo.OpenRead());
+              else
+                StorageService.CacheNetAssembly(fileInfo.Name, fileInfo.OpenRead());
+              Dispatcher.BeginInvoke(() => LoadOrReplaceAssembly(assembly));
+            }
           }
           catch (Exception ex)
           {
@@ -177,6 +188,12 @@ namespace IL.View
 
         Dispatcher.BeginInvoke(() => _busyContext.IsBusy = false);
       });
+    }
+
+    private void LoadXapPackage(FileInfo fileInfo)
+    {
+      var node = new XapPackageNode(fileInfo);
+      SilverlightAssemblies.Items.Add(node);
     }
 
     private void LoadAssembly(AssemblyDefinition definition)
@@ -303,7 +320,7 @@ namespace IL.View
       });
     }
 
-    private AssemblyDefinition TryResolveHigherVersionAssembly(AssemblyDefinition callingAssembly, AssemblyNameReference reference)
+    private static AssemblyDefinition TryResolveHigherVersionAssembly(AssemblyDefinition callingAssembly, AssemblyNameReference reference)
     {
       foreach (var assembly in ApplicationModel.Current.AssemblyCache.Assemblies)
       {
@@ -342,7 +359,7 @@ namespace IL.View
       // ask user to resolve assembly manually
       if (definition == null)
       {
-        AutoResetEvent requestProcessed = new AutoResetEvent(false);
+        var requestProcessed = new AutoResetEvent(false);
 
         Dispatcher.BeginInvoke(() =>
         {
@@ -519,32 +536,27 @@ namespace IL.View
     {
       //LoadingAssembliesIndicator.IsBusy = true;
 
-      ThreadPool.QueueUserWorkItem((state) =>
+      ThreadPool.QueueUserWorkItem((state) => Dispatcher.BeginInvoke(() =>
       {
-        //Thread.Sleep(1 * 1000);       
-
-        Dispatcher.BeginInvoke(() =>
+        foreach (var assemblyName in StorageService.EnumerateAssemblyCache())
         {
-          foreach (var assemblyName in StorageService.EnumerateAssemblyCache())
+          using (var stream = StorageService.OpenCachedAssembly(assemblyName))
           {
-            using (var stream = StorageService.OpenCachedAssembly(assemblyName))
+            try
             {
-              try
-              {
-                var definition = AssemblyDefinition.ReadAssembly(stream);
-                //LoadAssembly(definition);
-                ApplicationModel.Current.AssemblyCache.AddAssembly(definition);
-              }
-              catch (Exception ex)
-              {
-                Debug.WriteLine(ex.Message);
-              }
+              var definition = AssemblyDefinition.ReadAssembly(stream);
+              //LoadAssembly(definition);
+              ApplicationModel.Current.AssemblyCache.AddAssembly(definition);
+            }
+            catch (Exception ex)
+            {
+              Debug.WriteLine(ex.Message);
             }
           }
+        }
 
-          //LoadingAssembliesIndicator.IsBusy = false;
-        });
-      });
+        //LoadingAssembliesIndicator.IsBusy = false;
+      }));
     }
 
     [Obsolete("Temporary")]

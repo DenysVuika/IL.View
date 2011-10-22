@@ -59,6 +59,11 @@ namespace IL.View
       public const string DerivedTypes = "derived-types-16";
 
       public const string Package = "package-x-generic_22";
+      public const string XapPackage = "xap-package-16";
+
+      public const string FileXml = "file-xml-16";
+      public const string FileMisc = "file-misc-16";
+      public const string FolderClosed = "folder-closed-16";
 
       public static Image GetDefaultImage(string name)
       {

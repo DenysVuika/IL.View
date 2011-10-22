@@ -16,6 +16,7 @@
     <Style TargetType="controls:MethodNode" BasedOn="{StaticResource TreeViewItemBase}"/>
     <Style TargetType="controls:PropertyNode" BasedOn="{StaticResource TreeViewItemBase}"/>
     <Style TargetType="controls:EventNode" BasedOn="{StaticResource TreeViewItemBase}"/>
+    <Style TargetType="controls:XapPackageNode" BasedOn="{StaticResource TreeViewItemBase}"/>
   </UserControl.Resources>
 
   <Grid>
