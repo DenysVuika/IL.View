@@ -31,15 +31,35 @@ namespace IL.View
   {
     public App()
     {
-      this.Startup += this.Application_Startup;
-      this.UnhandledException += this.Application_UnhandledException;
+      Startup += this.Application_Startup;
+      UnhandledException += this.Application_UnhandledException;
 
       InitializeComponent();
+
+      CheckAndDownloadUpdateCompleted += OnCheckAndDownloadUpdateCompleted;
+      CheckAndDownloadUpdateAsync();
+    }
+
+    private static void OnCheckAndDownloadUpdateCompleted(object sender, CheckAndDownloadUpdateCompletedEventArgs e)
+    {
+      if (e.UpdateAvailable)
+      {
+        MessageBox.Show("An application update has been downloaded. " +
+            "Restart the application to run the new version.");
+      }
+      else if (e.Error != null)
+      {
+        MessageBox.Show(
+            "An application update is available, but an error has occurred.\n" +
+            "This can happen, for example, when the update requires\n" +
+            "a new version of Silverlight or requires elevated trust.\n" +
+            "To install the update, visit the application home page.");
+      }
     }
 
     private void Application_Startup(object sender, StartupEventArgs e)
     {
-      this.RootVisual = new MainPage();
+      RootVisual = new MainPage();
     }
 
     private void Application_UnhandledException(object sender, ApplicationUnhandledExceptionEventArgs e)
