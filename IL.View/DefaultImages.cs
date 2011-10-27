@@ -64,6 +64,8 @@ namespace IL.View
       public const string FileXml = "file-xml-16";
       public const string FileMisc = "file-misc-16";
       public const string FolderClosed = "folder-closed-16";
+      public const string Bug = "bug";
+      public const string BugError = "bug_error";
 
       public static Image GetDefaultImage(string name)
       {

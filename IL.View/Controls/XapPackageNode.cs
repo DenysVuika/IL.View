@@ -24,11 +24,12 @@
 
 using System.Windows;
 using System.Windows.Resources;
-using IL.View.Model;
 using Mono.Cecil;
 using System.IO;
 using System;
 using System.Linq;
+using System.Diagnostics;
+using System.Windows.Controls;
 
 namespace IL.View.Controls
 {
@@ -56,39 +57,31 @@ namespace IL.View.Controls
       {
         var ext = Path.GetExtension(file);
         if (!string.IsNullOrWhiteSpace(ext)) ext = ext.ToLowerInvariant();
-
-        //var icon = DefaultImages.AssemblyBrowser.FileMisc;
-        //if (ext == ".xml") icon = DefaultImages.AssemblyBrowser.FileXml;
-        //if (ext == ".xaml") icon = DefaultImages.AssemblyBrowser.FileXml;
-        //if (ext == ".clientconfig") icon = DefaultImages.AssemblyBrowser.FileXml;
-        //if (ext == ".dll") icon = DefaultImages.AssemblyBrowser.Assembly;
         
         var subfolders = file.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
         if (subfolders.Length > 1)
         {
           TreeNode rootNode = null;
+          TreeNode currentNode = null;
           for (var i = 0; i < subfolders.Length - 1; i++)
           {
             var node = new SimpleNode(DefaultImages.AssemblyBrowser.FolderClosed, subfolders[i]);
-            if (rootNode != null) rootNode.Items.Add(node);
-            rootNode = node;
-          }
+            if (currentNode != null) currentNode.Items.Add(node);
+            currentNode = node;
 
-          //var fileNode = new SimpleNode(icon, subfolders[subfolders.Length - 1]);
-          var fileNode = GenerateNode(definition, subfolders[subfolders.Length - 1]);
-          if (rootNode != null)
-          {
-            rootNode.Items.Add(fileNode);
+            if (rootNode != null) continue;
+            rootNode = currentNode;
             view.Items.Add(rootNode);
           }
+
+          var fileNode = GenerateNode(definition, subfolders[subfolders.Length - 1]);
+          if (currentNode != null)
+            currentNode.Items.Add(fileNode);
           else
-          {
             view.Items.Add(fileNode);
-          }
         }
         else
         {
-          //var node = new SimpleNode(icon, file);
           var node = GenerateNode(definition, file);
           view.Items.Add(node); 
         }
@@ -103,6 +96,13 @@ namespace IL.View.Controls
       {
         var zipInfo = new StreamResourceInfo(package.OpenRead(), null);
         var streamInfo = Application.GetResourceStream(zipInfo, new Uri(uri, UriKind.Relative));
+        if (streamInfo == null)
+        {
+          Debug.WriteLine("Error loading assembly '{0}/{1}'", package.FullName, uri);
+          var node = new SimpleNode(DefaultImages.AssemblyBrowser.BugError, uri);
+          ToolTipService.SetToolTip(node, string.Format("Error loading assembly '{0}/{1}'.", package.Name, uri));
+          return node;
+        }
         var fileStream = streamInfo.Stream;
         var definition = AssemblyDefinition.ReadAssembly(fileStream);
         return new AssemblyNode(definition);
