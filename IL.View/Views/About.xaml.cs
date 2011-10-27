@@ -22,17 +22,8 @@
  * THE SOFTWARE.
  * */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Windows;
+using System.Reflection;
 using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using System.Windows.Navigation;
 
 namespace IL.View
@@ -42,6 +33,8 @@ namespace IL.View
     public About()
     {
       InitializeComponent();
+      var assemblyName = new AssemblyName(typeof(About).Assembly.FullName);
+      VersionNumber.Text = "Version: " + assemblyName.Version;
     }
 
     // Executes when the user navigates to this page.

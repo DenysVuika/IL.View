@@ -8,6 +8,7 @@
   <Grid x:Name="LayoutRoot">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
     <!--<ScrollViewer x:Name="PageScrollViewer" Style="{StaticResource PageScrollViewerStyle}">
@@ -21,7 +22,8 @@
 
     </ScrollViewer>-->
     <TextBlock x:Name="HeaderText" Grid.Row="0" Style="{StaticResource HeaderTextStyle}" Text="About" />
-    <Border Grid.Row="1">
+    <TextBlock x:Name="VersionNumber" Grid.Row="1" Margin="0,5"/>
+    <Border Grid.Row="2">
       <TextBlock Text="IL.View is an open-source Silverlight .NET assembly browser and decompiler."/>
     </Border>
   </Grid>
