@@ -23,15 +23,14 @@
  * */
 
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Linq;
-using Mono.Cecil;
 using System.Windows.Input;
 using IL.View.Model;
+using Mono.Cecil;
 
 namespace IL.View.Controls
 {
-  public class AssemblyNode : TreeNode<AssemblyDefinition>
+  public sealed class AssemblyNode : TreeNode<AssemblyDefinition>
   {
     public override AssemblyDefinition DeclaringAssembly
     {
@@ -47,8 +46,8 @@ namespace IL.View.Controls
       : base(component)
     {
       DefaultStyleKey = typeof(AssemblyNode);
-      var header = CreateHeaderCore(DefaultImages.AssemblyBrowser.Assembly, null, component.Name.Name, true);            
-      Header = header;
+      var name = string.Format("{0}  ({1})", component.Name.Name, component.IsSilverlight() ? "SL" : ".NET");
+      Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.Assembly, null, name, true);            
       InitializeNode();
     }    
 

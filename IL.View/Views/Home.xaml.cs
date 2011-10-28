@@ -45,8 +45,8 @@ namespace IL.View
   {
     private static readonly string[] KnownExtensions = new[] { ".dll", ".exe", ".xap" };
 
-    private Queue<FileInfo> _pendingDownloads = new Queue<FileInfo>();
-    private BusyIndicatorContext _busyContext = new BusyIndicatorContext();
+    private readonly Queue<FileInfo> _pendingDownloads = new Queue<FileInfo>();
+    private readonly BusyIndicatorContext _busyContext = new BusyIndicatorContext();
 
     [Obsolete("Temporary solution until Mono.Cecil enhancements are applied")]
     // TODO: this approach is not thread-safe!
@@ -373,7 +373,7 @@ namespace IL.View
             definition = dialog.Definition;
             if (definition == null)
             {
-              //if (Debugger.IsAttached) Debugger.Break();
+              if (Debugger.IsAttached) Debugger.Break();
               // TODO: decide what to do here...
               // The corresponding IL generator should catch an exception and skip writing the code for failed section
             }
@@ -402,9 +402,9 @@ namespace IL.View
     private static string GetCSharpCode(object source)
     {
       var output = new ICSharpCode.Decompiler.PlainTextOutput();
-      var language = Model.Languages.GetLanguage("C#");
-      var shortDecompile = new Model.DecompilationOptions { FullDecompilation = false };
-      var fullDecompile = new Model.DecompilationOptions { FullDecompilation = true };
+      var language = Languages.GetLanguage("C#");
+      var shortDecompile = new DecompilationOptions { FullDecompilation = false };
+      var fullDecompile = new DecompilationOptions { FullDecompilation = true };
 
       var assembly = source as AssemblyDefinition;
       if (assembly != null)
@@ -536,7 +536,7 @@ namespace IL.View
     {
       //LoadingAssembliesIndicator.IsBusy = true;
 
-      ThreadPool.QueueUserWorkItem((state) => Dispatcher.BeginInvoke(() =>
+      ThreadPool.QueueUserWorkItem(state => Dispatcher.BeginInvoke(() =>
       {
         foreach (var assemblyName in StorageService.EnumerateAssemblyCache())
         {
