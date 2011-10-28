@@ -27,9 +27,9 @@ using Mono.Cecil;
 
 namespace IL.View.Controls
 {
-  public class AssemblyReferenceNode : TreeNode<AssemblyNameReference>
+  public sealed class AssemblyReferenceNode : TreeNode<AssemblyNameReference>
   {
-    private AssemblyDefinition _declaringAssembly;
+    private readonly AssemblyDefinition _declaringAssembly;
 
     public override AssemblyDefinition DeclaringAssembly
     {
@@ -45,7 +45,8 @@ namespace IL.View.Controls
       _declaringAssembly = declaringAssembly;
 
       DefaultStyleKey = typeof(AssemblyReferenceNode);
-      Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.Reference, null, component.Name, true);
+      var name = string.Format("{0}, Version={1}", component.Name, component.Version);
+      Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.Reference, null, name, true);
     }
   }
 }
