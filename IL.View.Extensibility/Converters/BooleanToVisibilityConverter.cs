@@ -22,38 +22,13 @@
  * THE SOFTWARE.
  * */
 
-using System.Linq;
-using Mono.Cecil;
+using System.Windows;
 
-namespace IL.View.Controls
+namespace IL.View.Converters
 {
-  public sealed class NamespaceNode : TreeNode<NamespaceDefinition>
+  public sealed class BooleanToVisibilityConverter : BooleanConverter<Visibility>
   {
-    public override AssemblyDefinition DeclaringAssembly
-    {
-      get { return AssociatedObject.DeclaringAssembly; }
-    }
-
-    public NamespaceNode(AssemblyDefinition declaringAssembly, string name)
-      : this(new NamespaceDefinition(declaringAssembly, name))
-    {
-    }
-
-    public NamespaceNode(NamespaceDefinition component)
-      : base(component)
-    {
-      DefaultStyleKey = typeof(NamespaceNode);
-      Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.Namespace, null, component.Name, true);
-      DataProvider = DoLoadNamespaceTypes;
-    }
-
-    private static void DoLoadNamespaceTypes(TreeNode<NamespaceDefinition> view, NamespaceDefinition definition)
-    {
-      foreach (var type in definition.Types.OrderBy(t => t.Name))
-      {
-        var typeView = new TypeNode(type);
-        view.Items.Add(typeView);
-      }
-    }
+    public BooleanToVisibilityConverter() :
+      base(Visibility.Visible, Visibility.Collapsed) { }
   }
 }

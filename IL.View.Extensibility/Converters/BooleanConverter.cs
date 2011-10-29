@@ -22,38 +22,32 @@
  * THE SOFTWARE.
  * */
 
-using System.Linq;
-using Mono.Cecil;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Windows.Data;
 
-namespace IL.View.Controls
+namespace IL.View.Converters
 {
-  public sealed class NamespaceNode : TreeNode<NamespaceDefinition>
+  public class BooleanConverter<T> : IValueConverter
   {
-    public override AssemblyDefinition DeclaringAssembly
+    public BooleanConverter(T trueValue, T falseValue)
     {
-      get { return AssociatedObject.DeclaringAssembly; }
+      True = trueValue;
+      False = falseValue;
     }
 
-    public NamespaceNode(AssemblyDefinition declaringAssembly, string name)
-      : this(new NamespaceDefinition(declaringAssembly, name))
+    public T True { get; set; }
+    public T False { get; set; }
+
+    public virtual object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
+      return value is bool && ((bool)value) ? True : False;
     }
 
-    public NamespaceNode(NamespaceDefinition component)
-      : base(component)
+    public virtual object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-      DefaultStyleKey = typeof(NamespaceNode);
-      Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.Namespace, null, component.Name, true);
-      DataProvider = DoLoadNamespaceTypes;
-    }
-
-    private static void DoLoadNamespaceTypes(TreeNode<NamespaceDefinition> view, NamespaceDefinition definition)
-    {
-      foreach (var type in definition.Types.OrderBy(t => t.Name))
-      {
-        var typeView = new TypeNode(type);
-        view.Items.Add(typeView);
-      }
+      return value is T && EqualityComparer<T>.Default.Equals((T)value, True);
     }
   }
 }

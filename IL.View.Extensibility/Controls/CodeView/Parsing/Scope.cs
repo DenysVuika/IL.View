@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace IL.View.Controls.CodeView
 {
+  [DebuggerDisplay("{Name}")]
   internal class Scope
   {
     public Scope(string name, int index, int length)

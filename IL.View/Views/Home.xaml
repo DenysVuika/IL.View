@@ -7,12 +7,14 @@
   xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
   xmlns:controls="clr-namespace:IL.View.Controls"  
   xmlns:cv="clr-namespace:IL.View.Controls.CodeView;assembly=IL.View.Core"
+  xmlns:converters="clr-namespace:IL.View.Converters;assembly=IL.View.Core"
   xmlns:model="clr-namespace:IL.View.Model"
   Style="{StaticResource PageStyle}"
   Loaded="OnLoaded">
   
   <navigation:Page.Resources>
     <model:LanguageInfoList x:Key="AvailableLanguages"/>
+    <converters:BooleanToVisibilityConverter x:Key="VisibleIfTrueConverter" True="Visible" False="Collapsed"/>
   </navigation:Page.Resources>
 
   <toolkit:BusyIndicator x:Name="DownloadIndicator" BusyContent="{Binding}" IsBusy="{Binding IsBusy}">
@@ -94,7 +96,7 @@
               <Button x:Name="NavigateCodeUri" Visibility="Collapsed" Content="Go" MinWidth="50" Grid.Column="1" Margin="2,0" Click="OnNavigateCodeUriClick"/>
             </Grid>
             <sdk:TabControl Grid.Row="1">
-              <sdk:TabItem Header="{Binding Path=CurrentLanguage.Name}">
+              <sdk:TabItem x:Name="CodeTab" Header="{Binding Path=CurrentLanguage.Name}">
                 <!--<sdk:TabControl>
                   <sdk:TabItem Header="Raw">-->
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
@@ -107,13 +109,16 @@
                   </sdk:TabItem>
                 </sdk:TabControl>-->
               </sdk:TabItem>
+              <sdk:TabItem x:Name="ContentTab" Header="Content" Visibility="Collapsed">
+                <ScrollViewer x:Name="DocumentView" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"/>
+              </sdk:TabItem>
             </sdk:TabControl>
             <ComboBox Width="150" Grid.Row="1" VerticalAlignment="Top" HorizontalAlignment="Right" Height="25" 
                       ItemsSource="{Binding AvailableLanguages}"
                       SelectedItem="{Binding CurrentLanguage, Mode=TwoWay}"                      
                       DisplayMemberPath="Name"
-                      >              
-            </ComboBox>
+                      Visibility="{Binding Path=IsSelected, ElementName=CodeTab, Converter={StaticResource VisibleIfTrueConverter}}"
+                      />              
             <TextBox x:Name="txtCodeUri" Visibility="Collapsed" IsReadOnly="True" Grid.Row="2"/>
           </Grid>
         </toolkit:BusyIndicator>

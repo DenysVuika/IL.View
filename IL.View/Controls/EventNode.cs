@@ -26,7 +26,7 @@ using Mono.Cecil;
 
 namespace IL.View.Controls
 {
-  public class EventNode : TreeNode<EventDefinition>
+  public sealed class EventNode : TreeNode<EventDefinition>
   {
     public override AssemblyDefinition DeclaringAssembly
     {

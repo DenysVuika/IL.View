@@ -22,38 +22,28 @@
  * THE SOFTWARE.
  * */
 
-using System.Linq;
+using System;
 using Mono.Cecil;
 
 namespace IL.View.Controls
 {
-  public sealed class NamespaceNode : TreeNode<NamespaceDefinition>
+  public sealed class FolderNode : TreeNode
   {
     public override AssemblyDefinition DeclaringAssembly
     {
-      get { return AssociatedObject.DeclaringAssembly; }
+      get { return null; }
     }
 
-    public NamespaceNode(AssemblyDefinition declaringAssembly, string name)
-      : this(new NamespaceDefinition(declaringAssembly, name))
-    {
-    }
+    public string FolderName { get; private set; }
 
-    public NamespaceNode(NamespaceDefinition component)
-      : base(component)
+    public FolderNode(string folderName)
+      : base(null)
     {
-      DefaultStyleKey = typeof(NamespaceNode);
-      Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.Namespace, null, component.Name, true);
-      DataProvider = DoLoadNamespaceTypes;
-    }
+      if (string.IsNullOrWhiteSpace(folderName)) throw new ArgumentNullException("folderName");
 
-    private static void DoLoadNamespaceTypes(TreeNode<NamespaceDefinition> view, NamespaceDefinition definition)
-    {
-      foreach (var type in definition.Types.OrderBy(t => t.Name))
-      {
-        var typeView = new TypeNode(type);
-        view.Items.Add(typeView);
-      }
+      DefaultStyleKey = typeof(FolderNode);
+      FolderName = folderName;
+      Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.FolderClosed, null, folderName, true);
     }
   }
 }

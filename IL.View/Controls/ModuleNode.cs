@@ -23,11 +23,10 @@
  * */
 
 using Mono.Cecil;
-using System.Windows;
 
 namespace IL.View.Controls
 {
-  public class ModuleNode : TreeNode<ModuleDefinition>
+  public sealed class ModuleNode : TreeNode<ModuleDefinition>
   {
     public override AssemblyDefinition DeclaringAssembly
     {

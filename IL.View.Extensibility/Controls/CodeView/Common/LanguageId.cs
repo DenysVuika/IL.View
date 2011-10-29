@@ -7,6 +7,7 @@
     public const string AspxVb = "aspx(vb.net)";
     public const string AspxCs = "aspx(c#)";
     public const string Xml = "xml";
+    public const string Xaml = "xaml";
     public const string Ashx = "ashx";
     public const string Aspx = "aspx";
     public const string Asax = "asax";

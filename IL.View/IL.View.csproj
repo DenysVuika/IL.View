@@ -105,6 +105,7 @@
     <Compile Include="Controls\AssemblyReferenceNode.cs" />
     <Compile Include="Controls\EventNode.cs" />
     <Compile Include="Controls\FieldNode.cs" />
+    <Compile Include="Controls\FolderNode.cs" />
     <Compile Include="Controls\MethodNode.cs" />
     <Compile Include="Controls\ModuleNode.cs" />
     <Compile Include="Controls\NamespaceNode.cs" />
@@ -113,6 +114,7 @@
     <Compile Include="Controls\SimpleNode.cs" />
     <Compile Include="Controls\TiledBackground.cs" />
     <Compile Include="Controls\TypeNode.cs" />
+    <Compile Include="Controls\XapEntryNode.cs" />
     <Compile Include="Controls\XapPackageNode.cs" />
     <Compile Include="DefaultImages.cs" />
     <Compile Include="MainPage.xaml.cs">
@@ -130,6 +132,9 @@
     <Compile Include="Model\RepositorySettings.cs" />
     <Compile Include="Model\StorageService.cs" />
     <Compile Include="Model\ContextMenuBuilder.cs" />
+    <Compile Include="Services\ContentViewerService.cs" />
+    <Compile Include="Services\IContentViewerService.cs" />
+    <Compile Include="Services\SourceCodeEventArgs.cs" />
     <Compile Include="Views\About.xaml.cs">
       <DependentUpon>About.xaml</DependentUpon>
     </Compile>

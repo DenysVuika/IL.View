@@ -85,6 +85,10 @@ namespace IL.View.Controls.CodeView
         case SourceLanguageType.IL:
           source.DefaultStyleSheet = StyleSheets.IL;
           break;
+        case SourceLanguageType.Xml:
+        case SourceLanguageType.Xaml:
+          source.DefaultStyleSheet = StyleSheets.Xml;
+          break;
         default:
           source.DefaultStyleSheet = StyleSheets.Default;
           break;
@@ -144,6 +148,7 @@ namespace IL.View.Controls.CodeView
       if (_textBox != null && !string.IsNullOrEmpty(SourceCode))
       {
         HighlightContents();
+        ScrollToStart();
       }
     }
 

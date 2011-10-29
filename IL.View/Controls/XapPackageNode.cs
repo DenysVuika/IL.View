@@ -22,6 +22,7 @@
  * THE SOFTWARE.
  * */
 
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Resources;
 using Mono.Cecil;
@@ -48,59 +49,74 @@ namespace IL.View.Controls
       DataProvider = DoLoadType;
     }
 
+    private static TreeNode GetOrCreateFolder(TreeNode root, IEnumerable<string> path)
+    {
+      var result = root;
+
+      var subfolders = root.Items.OfType<FolderNode>().ToList();
+
+      foreach (var folderName in path)
+      {
+        var existing = subfolders.FirstOrDefault(f => f.FolderName.Equals(folderName, StringComparison.OrdinalIgnoreCase));
+        if (existing != null)
+        {
+          result = existing;
+          subfolders = existing.Items.OfType<FolderNode>().ToList();
+          continue;
+        }
+
+        existing = new FolderNode(folderName);
+        subfolders.Clear();
+
+        if (result != null)
+          result.Items.Add(existing);
+        
+        result = existing;
+      }
+
+      return result ?? root;
+    }
+
     private static void DoLoadType(TreeNode<FileInfo> view, FileInfo definition)
     {
       var files = ZipUtil.GetZipContents(definition.OpenRead())
         .OrderByDescending(p => p.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar));
 
-      foreach (var file in files)
+      var package = new StreamResourceInfo(definition.OpenRead(), null);
+
+      foreach (var fileUri in files)
       {
-        var ext = Path.GetExtension(file);
-        if (!string.IsNullOrWhiteSpace(ext)) ext = ext.ToLowerInvariant();
+        var subfolders = fileUri.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
         
-        var subfolders = file.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
         if (subfolders.Length > 1)
         {
-          TreeNode rootNode = null;
-          TreeNode currentNode = null;
-          for (var i = 0; i < subfolders.Length - 1; i++)
-          {
-            var node = new SimpleNode(DefaultImages.AssemblyBrowser.FolderClosed, subfolders[i]);
-            if (currentNode != null) currentNode.Items.Add(node);
-            currentNode = node;
-
-            if (rootNode != null) continue;
-            rootNode = currentNode;
-            view.Items.Add(rootNode);
-          }
-
-          var fileNode = GenerateNode(definition, subfolders[subfolders.Length - 1]);
-          if (currentNode != null)
-            currentNode.Items.Add(fileNode);
-          else
-            view.Items.Add(fileNode);
+          var folderNode = GetOrCreateFolder(view, subfolders.Take(subfolders.Length - 1));
+          var fileName = subfolders.Last();
+          if (string.IsNullOrEmpty(fileName)) continue;
+          var fileNode = GenerateNode(package, fileName, fileUri);
+          folderNode.Items.Add(fileNode);
         }
         else
         {
-          var node = GenerateNode(definition, file);
+          var node = GenerateNode(package, Path.GetFileName(fileUri), fileUri);
           view.Items.Add(node); 
         }
       }
     }
 
-    private static TreeNode GenerateNode(FileInfo package, string uri)
+    private static TreeNode GenerateNode(StreamResourceInfo package, string header, string uri)
     {
-      var ext = Path.GetExtension(uri);
+      var ext = Path.GetExtension(header);
+      if (!string.IsNullOrWhiteSpace(ext)) ext = ext.ToLowerInvariant();
 
       if (ext == ".dll")
       {
-        var zipInfo = new StreamResourceInfo(package.OpenRead(), null);
-        var streamInfo = Application.GetResourceStream(zipInfo, new Uri(uri, UriKind.Relative));
+        var streamInfo = Application.GetResourceStream(package, new Uri(uri, UriKind.Relative));
         if (streamInfo == null)
         {
-          Debug.WriteLine("Error loading assembly '{0}/{1}'", package.FullName, uri);
-          var node = new SimpleNode(DefaultImages.AssemblyBrowser.BugError, uri);
-          ToolTipService.SetToolTip(node, string.Format("Error loading assembly '{0}/{1}'.", package.Name, uri));
+          Debug.WriteLine("Error loading assembly '{0}'", header);
+          var node = new SimpleNode(DefaultImages.AssemblyBrowser.BugError, header);
+          ToolTipService.SetToolTip(node, string.Format("Error loading assembly '{0}'.", header));
           return node;
         }
         var fileStream = streamInfo.Stream;
@@ -108,13 +124,7 @@ namespace IL.View.Controls
         return new AssemblyNode(definition);
       }
 
-      var icon = DefaultImages.AssemblyBrowser.FileMisc;
-      if (ext == ".xml") icon = DefaultImages.AssemblyBrowser.FileXml;
-      if (ext == ".xaml") icon = DefaultImages.AssemblyBrowser.FileXml;
-      if (ext == ".clientconfig") icon = DefaultImages.AssemblyBrowser.FileXml;
-      if (ext == ".dll") icon = DefaultImages.AssemblyBrowser.Assembly;
-
-      return new SimpleNode(icon, uri);
+      return new XapEntryNode(package, header, uri);
     }
   }
 }

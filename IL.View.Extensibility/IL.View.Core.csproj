@@ -72,6 +72,9 @@
     <Compile Include="Cecil\TypeDefinitionServices.cs" />
     <Compile Include="Cecil\TypeReferenceServices.cs" />
     <Compile Include="Cecil\Utils.cs" />
+    <Compile Include="Controls\CodeView\Styling\XmlStyleSheet.cs" />
+    <Compile Include="Converters\BooleanConverter.cs" />
+    <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
     <Compile Include="Decompiler\DecompileRequestEventArgs.cs" />
     <Compile Include="Controls\CodeView\CodeColorizer.cs" />
     <Compile Include="Controls\CodeView\CodeTextBlock.cs" />

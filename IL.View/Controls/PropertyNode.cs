@@ -26,7 +26,7 @@ using Mono.Cecil;
 
 namespace IL.View.Controls
 {
-  public class PropertyNode : TreeNode<PropertyDefinition>
+  public sealed class PropertyNode : TreeNode<PropertyDefinition>
   {
     public override AssemblyDefinition DeclaringAssembly
     {

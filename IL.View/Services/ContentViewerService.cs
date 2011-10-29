@@ -22,38 +22,21 @@
  * THE SOFTWARE.
  * */
 
-using System.Linq;
-using Mono.Cecil;
+using System;
+using System.ComponentModel.Composition;
+using IL.View.Controls.CodeView;
 
-namespace IL.View.Controls
+namespace IL.View.Services
 {
-  public sealed class NamespaceNode : TreeNode<NamespaceDefinition>
+  [Export(typeof(IContentViewerService))]
+  public class ContentViewerService : IContentViewerService
   {
-    public override AssemblyDefinition DeclaringAssembly
+    public event EventHandler<SourceCodeEventArgs> SourceCodeViewRequested;
+    
+    public void ShowSourceCode(string sourceName, SourceLanguageType languageType, string sourceCode)
     {
-      get { return AssociatedObject.DeclaringAssembly; }
-    }
-
-    public NamespaceNode(AssemblyDefinition declaringAssembly, string name)
-      : this(new NamespaceDefinition(declaringAssembly, name))
-    {
-    }
-
-    public NamespaceNode(NamespaceDefinition component)
-      : base(component)
-    {
-      DefaultStyleKey = typeof(NamespaceNode);
-      Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.Namespace, null, component.Name, true);
-      DataProvider = DoLoadNamespaceTypes;
-    }
-
-    private static void DoLoadNamespaceTypes(TreeNode<NamespaceDefinition> view, NamespaceDefinition definition)
-    {
-      foreach (var type in definition.Types.OrderBy(t => t.Name))
-      {
-        var typeView = new TypeNode(type);
-        view.Items.Add(typeView);
-      }
+      var handler = SourceCodeViewRequested;
+      if (handler != null) handler(this, new SourceCodeEventArgs(sourceName, languageType, sourceCode));
     }
   }
 }

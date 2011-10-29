@@ -1,4 +1,6 @@
-﻿namespace IL.View.Controls.CodeView
+﻿using IL.View.Controls.CodeView.Styling;
+
+namespace IL.View.Controls.CodeView
 {
   /// <summary>
   /// Provides easy access to ColorCode's built-in style sheets.
@@ -8,6 +10,7 @@
     private static IStyleSheet _default;
     private static IStyleSheet _il;
     private static IStyleSheet _csharp;
+    private static IStyleSheet _xml;
 
     /// <summary>
     /// Gets the default style sheet.
@@ -28,6 +31,11 @@
     public static IStyleSheet CSharp
     {
       get { return _csharp ?? (_csharp = new DefaultStyleSheet()); }
+    }
+
+    public static IStyleSheet Xml
+    {
+      get { return _xml ?? (_xml = new XmlStyleSheet()); }
     }
   }
 }

@@ -38,6 +38,7 @@ using IL.View.Decompiler;
 using IL.View.Model;
 using IL.View.Views;
 using Mono.Cecil;
+using IL.View.Services;
 
 namespace IL.View
 {
@@ -60,6 +61,9 @@ namespace IL.View
 
     [Import]
     public DecompilerManager DecompilerManager { get; set; }
+
+    [Import]
+    public IContentViewerService ContentViewerService { get; set; }
 
     private static BaseAssemblyResolver AssemblyResolver
     {
@@ -88,9 +92,9 @@ namespace IL.View
       ApplicationModel.Current.AssemblyCache.AssemblyRemoved += AssemblyCache_AssemblyRemoved;
       DecompilerManager.CodeDisassemblyRequested += OnCodeDisassemblyRequested;
       ApplicationModel.Current.CurrentLanguageChanged += OnCurrentLanguageChanged;
-      
+      ContentViewerService.SourceCodeViewRequested += OnSourceCodeViewRequested;
     }
-        
+    
     // Executes when the user navigates from this page.
     protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
     {
@@ -99,6 +103,7 @@ namespace IL.View
       ApplicationModel.Current.AssemblyCache.AssemblyRemoved -= AssemblyCache_AssemblyRemoved;
       DecompilerManager.CodeDisassemblyRequested -= OnCodeDisassemblyRequested;
       ApplicationModel.Current.CurrentLanguageChanged -= OnCurrentLanguageChanged;
+      ContentViewerService.SourceCodeViewRequested -= OnSourceCodeViewRequested;
       base.OnNavigatingFrom(e);
     }
 
@@ -590,6 +595,20 @@ namespace IL.View
       if (string.IsNullOrWhiteSpace(CodeUri.Text)) return;
       var method = ApplicationModel.Current.FindMethodDefinition(new Uri(CodeUri.Text, UriKind.Absolute));
       if (method != null) SelectMethod(method);
+    }
+
+    private void OnSourceCodeViewRequested(object sender, SourceCodeEventArgs e)
+    {
+      var view = new CodeTextBox
+      {
+        SourceLanguage = e.SourceLanguage,
+        SourceCode = e.SourceCode
+      };
+
+      DocumentView.Content = view;
+      ContentTab.Header = e.SourceName;
+      ContentTab.Visibility = Visibility.Visible;
+      ContentTab.IsSelected = true;
     }
   }
 }

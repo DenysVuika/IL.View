@@ -47,21 +47,26 @@ namespace IL.View.Controls.CodeView
       foreach (Scope scope in scopes)
       {
         string t = parsedSourceCode.Substring(scope.Index, scope.Length);
+        if (string.IsNullOrEmpty(t)) continue;
+
         //                    .Replace("\r\n", "\n")
         //                    .Replace("\r", "\n");
         offset = scope.Index + scope.Length;
-        if (!string.IsNullOrEmpty(t))
+
+        var text = t.Replace("\r", string.Empty);
+        // temp solution - adding spaces between words
+        if (offset < parsedSourceCode.Length - 1 && (parsedSourceCode[offset] == ' ' || parsedSourceCode[offset] == '\r'))
+          text += " ";
+
+        Inline run = new Run { Text = text };
+        if (styleSheet.Styles.Contains(scope.Name))
         {
-          Inline run = new Run { Text = t.Replace("\r", string.Empty) };
-          if (scope != null && styleSheet.Styles.Contains(scope.Name))
-          {
-            Style style = styleSheet.Styles[scope.Name];
-            run.Foreground = new SolidColorBrush(style.Foreground);
-            run.FontWeight = style.FontWeight;
-          }
-          lastScopeWasComment = (scope != null && scope.Name == "Comment");
-          _text.Inlines.Add(run);
+          var style = styleSheet.Styles[scope.Name];
+          run.Foreground = new SolidColorBrush(style.Foreground);
+          run.FontWeight = style.FontWeight;
         }
+        lastScopeWasComment = (scope.Name == "Comment");
+        _text.Inlines.Add(run);
       }
       string left = parsedSourceCode
           .Substring(offset)
@@ -148,21 +153,26 @@ namespace IL.View.Controls.CodeView
       foreach (Scope scope in scopes)
       {
         string t = parsedSourceCode.Substring(scope.Index, scope.Length);
-        //                    .Replace("\r\n", "\n")
-        //                    .Replace("\r", "\n");
+          //.Replace("\r\n", "\n")
+          //.Replace("\r", "\n");
+        if (string.IsNullOrEmpty(t)) continue;
+        
         offset = scope.Index + scope.Length;
-        if (!string.IsNullOrEmpty(t))
+        
+        var text = t.Replace("\r", string.Empty);
+        // temp solution - adding spaces between words
+        if (offset < parsedSourceCode.Length - 1 && (parsedSourceCode[offset] == ' ' || parsedSourceCode[offset] == '\r'))
+          text += " ";
+
+        Inline run = new Run { Text = text };
+        if (styleSheet.Styles.Contains(scope.Name))
         {
-          Inline run = new Run { Text = t.Replace("\r", string.Empty) };
-          if (scope != null && styleSheet.Styles.Contains(scope.Name))
-          {
-            Style style = styleSheet.Styles[scope.Name];
-            run.Foreground = new SolidColorBrush(style.Foreground);
-            run.FontWeight = style.FontWeight;
-          }
-          lastScopeWasComment = (scope != null && scope.Name == "Comment");
-          _paragraph.Inlines.Add(run);
+          Style style = styleSheet.Styles[scope.Name];
+          run.Foreground = new SolidColorBrush(style.Foreground);
+          run.FontWeight = style.FontWeight;
         }
+        lastScopeWasComment = (scope.Name == "Comment");
+        _paragraph.Inlines.Add(run);
       }
       string left = parsedSourceCode
           .Substring(offset)
