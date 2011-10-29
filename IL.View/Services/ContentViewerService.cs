@@ -24,6 +24,7 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Windows.Media.Imaging;
 using IL.View.Controls.CodeView;
 
 namespace IL.View.Services
@@ -32,11 +33,18 @@ namespace IL.View.Services
   public class ContentViewerService : IContentViewerService
   {
     public event EventHandler<SourceCodeEventArgs> SourceCodeViewRequested;
+    public event EventHandler<ImageEventArgs> ImageViewRequested;
     
     public void ShowSourceCode(string sourceName, SourceLanguageType languageType, string sourceCode)
     {
       var handler = SourceCodeViewRequested;
       if (handler != null) handler(this, new SourceCodeEventArgs(sourceName, languageType, sourceCode));
+    }
+
+    public void ShowImage(string imageName, BitmapSource imageSource)
+    {
+      var handler = ImageViewRequested;
+      if (handler != null) handler(this, new ImageEventArgs(imageName, imageSource));
     }
   }
 }

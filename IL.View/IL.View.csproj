@@ -134,6 +134,7 @@
     <Compile Include="Model\ContextMenuBuilder.cs" />
     <Compile Include="Services\ContentViewerService.cs" />
     <Compile Include="Services\IContentViewerService.cs" />
+    <Compile Include="Services\ImageEventArgs.cs" />
     <Compile Include="Services\SourceCodeEventArgs.cs" />
     <Compile Include="Views\About.xaml.cs">
       <DependentUpon>About.xaml</DependentUpon>
@@ -270,6 +271,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\AssemblyBrowser\bug_error.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\AssemblyBrowser\file-image-16.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

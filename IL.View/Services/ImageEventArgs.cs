@@ -23,17 +23,20 @@
  * */
 
 using System;
-using IL.View.Controls.CodeView;
 using System.Windows.Media.Imaging;
 
 namespace IL.View.Services
 {
-  public interface IContentViewerService
+  public sealed class ImageEventArgs : EventArgs
   {
-    event EventHandler<SourceCodeEventArgs> SourceCodeViewRequested;
-    event EventHandler<ImageEventArgs> ImageViewRequested;
+    public string ImageName { get; private set; }
+    public BitmapSource ImageSource { get; private set; }
 
-    void ShowSourceCode(string sourceName, SourceLanguageType languageType, string sourceCode);
-    void ShowImage(string imageName, BitmapSource imageSource);
+    public ImageEventArgs(string imageName, BitmapSource imageSource)
+    {
+      if (string.IsNullOrWhiteSpace(imageName)) throw new ArgumentNullException("imageName");
+      ImageName = imageName;
+      ImageSource = imageSource;
+    }
   }
 }

@@ -32,6 +32,7 @@ using IL.View.Controls.CodeView;
 using IL.View.Services;
 using Mono.Cecil;
 using System.Windows;
+using System.Windows.Media.Imaging;
 
 namespace IL.View.Controls
 {
@@ -90,6 +91,8 @@ namespace IL.View.Controls
         case ".xaml":
         case ".clientconfig":
           return DefaultImages.AssemblyBrowser.FileXml;
+        case ".png":
+          return DefaultImages.AssemblyBrowser.FileImage;
         default:
           return DefaultImages.AssemblyBrowser.FileMisc;
       }
@@ -113,12 +116,27 @@ namespace IL.View.Controls
         case ".xml":
         case ".xaml":
         case ".clientconfig":
-          var content = new StreamReader(OpenRead()).ReadToEnd();
-          ContentViewerService.ShowSourceCode(_resourceName, SourceLanguageType.Xaml, content);
-          return true;
+          return OpenAsXml();
+        case ".png":
+          return OpenAsImage();
         default:
           return false;
       }
+    }
+
+    private bool OpenAsXml()
+    {
+      var content = new StreamReader(OpenRead()).ReadToEnd();
+      ContentViewerService.ShowSourceCode(_resourceName, SourceLanguageType.Xaml, content);
+      return true;
+    }
+
+    private bool OpenAsImage()
+    {
+      var bitmap = new BitmapImage();
+      bitmap.SetSource(OpenRead());
+      ContentViewerService.ShowImage(_resourceName, bitmap);
+      return true;
     }
   }
 }

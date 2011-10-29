@@ -31,6 +31,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Navigation;
 using IL.View.Controls;
 using IL.View.Controls.CodeView;
@@ -92,7 +93,9 @@ namespace IL.View
       ApplicationModel.Current.AssemblyCache.AssemblyRemoved += AssemblyCache_AssemblyRemoved;
       DecompilerManager.CodeDisassemblyRequested += OnCodeDisassemblyRequested;
       ApplicationModel.Current.CurrentLanguageChanged += OnCurrentLanguageChanged;
+      
       ContentViewerService.SourceCodeViewRequested += OnSourceCodeViewRequested;
+      ContentViewerService.ImageViewRequested += OnImageViewRequested;
     }
     
     // Executes when the user navigates from this page.
@@ -103,7 +106,10 @@ namespace IL.View
       ApplicationModel.Current.AssemblyCache.AssemblyRemoved -= AssemblyCache_AssemblyRemoved;
       DecompilerManager.CodeDisassemblyRequested -= OnCodeDisassemblyRequested;
       ApplicationModel.Current.CurrentLanguageChanged -= OnCurrentLanguageChanged;
+      
       ContentViewerService.SourceCodeViewRequested -= OnSourceCodeViewRequested;
+      ContentViewerService.ImageViewRequested -= OnImageViewRequested;
+
       base.OnNavigatingFrom(e);
     }
 
@@ -605,8 +611,24 @@ namespace IL.View
         SourceCode = e.SourceCode
       };
 
-      DocumentView.Content = view;
-      ContentTab.Header = e.SourceName;
+      DisplayContent(e.SourceName, view);
+    }
+
+    private void OnImageViewRequested(object sender, ImageEventArgs e)
+    {
+      var view = new Image
+      {
+        Source = e.ImageSource,
+        Stretch = Stretch.None
+      };
+
+      DisplayContent(e.ImageName, view);
+    }
+
+    private void DisplayContent(string header, object content)
+    {
+      DocumentView.Content = content;
+      ContentTab.Header = header;
       ContentTab.Visibility = Visibility.Visible;
       ContentTab.IsSelected = true;
     }
