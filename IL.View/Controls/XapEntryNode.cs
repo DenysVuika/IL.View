@@ -92,6 +92,7 @@ namespace IL.View.Controls
         case ".clientconfig":
           return DefaultImages.AssemblyBrowser.FileXml;
         case ".png":
+        case ".jpg":
           return DefaultImages.AssemblyBrowser.FileImage;
         default:
           return DefaultImages.AssemblyBrowser.FileMisc;
@@ -118,6 +119,7 @@ namespace IL.View.Controls
         case ".clientconfig":
           return OpenAsXml();
         case ".png":
+        case ".jpg":
           return OpenAsImage();
         default:
           return false;
