@@ -105,6 +105,7 @@
     <Compile Include="Controls\AssemblyReferenceNode.cs" />
     <Compile Include="Controls\EventNode.cs" />
     <Compile Include="Controls\FieldNode.cs" />
+    <Compile Include="Controls\FileNode.cs" />
     <Compile Include="Controls\FolderNode.cs" />
     <Compile Include="Controls\MethodNode.cs" />
     <Compile Include="Controls\ModuleNode.cs" />
@@ -115,7 +116,6 @@
     <Compile Include="Controls\SimpleNode.cs" />
     <Compile Include="Controls\TiledBackground.cs" />
     <Compile Include="Controls\TypeNode.cs" />
-    <Compile Include="Controls\XapEntryNode.cs" />
     <Compile Include="Controls\XapPackageNode.cs" />
     <Compile Include="DefaultImages.cs" />
     <Compile Include="MainPage.xaml.cs">

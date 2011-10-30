@@ -53,7 +53,6 @@ namespace IL.View.Controls
     }
 
     // TODO: Ask/warn user whether he wants to load assembly! Introduce settings option to enable/disable warning, add "Don't remind" on warning dialog
-    // TODO: Introduce ResourceEntryNode that can display image/xml resources on Space press.
     private void DoLoadType(TreeNode<Resource> view, Resource definition)
     {
       var assembly = new AssemblyPart().Load(_assemblySource.OpenRead());
@@ -72,7 +71,10 @@ namespace IL.View.Controls
       var enumerator = rs.GetEnumerator();
       while (enumerator.MoveNext())
       {
-        view.Items.Add(new SimpleNode(DefaultImages.AssemblyBrowser.FileMisc, (string)enumerator.Key));
+        //view.Items.Add(new SimpleNode(DefaultImages.AssemblyBrowser.FileMisc, (string)enumerator.Key));
+        var resourceName = (string)enumerator.Key;
+        var resourceStream = new EmbeddedResourceStream(rs, resourceName);
+        view.Items.Add(new FileNode(resourceStream, resourceName));
       }
     }
   }

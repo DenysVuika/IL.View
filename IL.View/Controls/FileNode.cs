@@ -22,6 +22,7 @@
  * THE SOFTWARE.
  * */
 
+using System;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Windows.Input;
@@ -33,36 +34,39 @@ using Mono.Cecil;
 
 namespace IL.View.Controls
 {
-  public sealed class XapEntryNode : TreeNode
+  public sealed class FileNode : TreeNode
   {
     [Import]
     public IContentViewerService ContentViewerService { get; set; }
 
+    private readonly AssemblyStream _source;
+    private readonly string _resourcePath;
     private readonly string _extension;
-
-    private readonly AssemblyStream _packageEntry;
-    private readonly string _header;
+    private readonly string _fileName;
 
     public override AssemblyDefinition DeclaringAssembly
     {
       get { return null; }
     }
 
-    public XapEntryNode(AssemblyStream packageEntry, string header)
+    public FileNode(AssemblyStream source, string resourcePath)
       : base(null)
     {
-      DefaultStyleKey = typeof(XapEntryNode);
+      if (source == null) throw new ArgumentNullException("source");
+      if (string.IsNullOrWhiteSpace(resourcePath)) throw new ArgumentNullException("resourcePath");
 
-      _packageEntry = packageEntry;
-      _header = header;
-
-      _extension = Path.GetExtension(header);
+      _source = source;
+      _resourcePath = resourcePath;
+      _fileName = Path.GetFileName(_resourcePath);
+      
+      _extension = Path.GetExtension(_fileName);
       if (!string.IsNullOrEmpty(_extension)) _extension = _extension.ToLowerInvariant();
 
-      Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.GetFileIcon(header), null, header, true);
+      Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.GetFileIcon(_fileName), null, resourcePath, true);
+      DefaultStyleKey = typeof(FileNode);
       CompositionInitializer.SatisfyImports(this);
     }
-    
+
     protected override void OnKeyDown(KeyEventArgs e)
     {
       if (e.Key == Key.Space)
@@ -92,16 +96,16 @@ namespace IL.View.Controls
 
     private bool OpenAsXml()
     {
-      var content = new StreamReader(_packageEntry.OpenRead()).ReadToEnd();
-      ContentViewerService.ShowSourceCode(_header, SourceLanguageType.Xaml, content);
+      var content = new StreamReader(_source.OpenRead()).ReadToEnd();
+      ContentViewerService.ShowSourceCode(_fileName, SourceLanguageType.Xaml, content);
       return true;
     }
 
     private bool OpenAsImage()
     {
       var bitmap = new BitmapImage();
-      bitmap.SetSource(_packageEntry.OpenRead());
-      ContentViewerService.ShowImage(_header, bitmap);
+      bitmap.SetSource(_source.OpenRead());
+      ContentViewerService.ShowImage(_fileName, bitmap);
       return true;
     }
   }

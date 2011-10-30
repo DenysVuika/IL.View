@@ -28,6 +28,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Resources;
 using System.Linq;
+using System.Resources;
 
 namespace IL.View.Model
 {
@@ -159,6 +160,31 @@ namespace IL.View.Model
     {
       var streamInfo = Application.GetResourceStream(_package, new Uri(_name, UriKind.Relative));
       return streamInfo.Stream;
+    }
+  }
+
+  public sealed class EmbeddedResourceStream : AssemblyStream
+  {
+    private readonly ResourceSet _source;
+    private readonly string _name;
+    
+    public override string Name
+    {
+      get { return _name; }
+    }
+
+    public EmbeddedResourceStream(ResourceSet source, string name)
+    {
+      if (source == null) throw new ArgumentNullException("source");
+      if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException("name");
+
+      _source = source;
+      _name = name;
+    }
+
+    public override Stream OpenRead()
+    {
+      return _source.GetObject(_name, true) as Stream;
     }
   }
 }

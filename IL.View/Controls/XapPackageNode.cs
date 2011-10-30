@@ -108,7 +108,7 @@ namespace IL.View.Controls
         return new AssemblyNode(definition, entry);
       }
 
-      return new XapEntryNode(entry, header);
+      return new FileNode(entry, header);
     }
   }
 }
