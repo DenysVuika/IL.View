@@ -19,6 +19,7 @@
     <Style TargetType="controls:XapPackageNode" BasedOn="{StaticResource TreeViewItemBase}"/>    
     <Style TargetType="controls:XapEntryNode" BasedOn="{StaticResource TreeViewItemBase}"/>
     <Style TargetType="controls:FolderNode" BasedOn="{StaticResource TreeViewItemBase}"/>
+    <Style TargetType="controls:ResourceNode" BasedOn="{StaticResource TreeViewItemBase}"/>
   </UserControl.Resources>
 
   <Grid>

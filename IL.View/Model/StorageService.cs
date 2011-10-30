@@ -79,22 +79,35 @@ namespace IL.View.Model
       File.WriteAllBytes(path, buffer);
     }
 
-    public static void CacheSilverlightAssembly(string name, Stream data)
+    public static string CacheSilverlightAssembly(string name, Stream data)
     {
-      if (IsEnabled) CacheAssembly(Path.Combine(GetSilverilghtCacheFolder(), name), data);
+      string assemblyPath = null;
+      if (IsEnabled)
+      {
+        assemblyPath = Path.Combine(GetSilverilghtCacheFolder(), name);
+        CacheAssembly(assemblyPath, data);
+      }
+
+      return assemblyPath;
     }
 
-    public static void CacheNetAssembly(string name, Stream data)
+    public static string CacheNetAssembly(string name, Stream data)
     {
-      if (IsEnabled) CacheAssembly(Path.Combine(GetNetCacheFolder(), name), data);
+      string assemblyPath = null;
+      if (IsEnabled)
+      {
+        assemblyPath = Path.Combine(GetNetCacheFolder(), name);
+        CacheAssembly(assemblyPath, data);
+      }
+      return assemblyPath;
     }
-
-    public static IEnumerable<string> EnumerateAssemblyCache()
+    
+    public static IEnumerable<FileInfo> EnumerateFiles()
     {
       if (!IsEnabled) yield break;
 
       foreach (var path in Directory.EnumerateFiles(GetAssemblyCacheFolder(), "*.dll", SearchOption.AllDirectories))
-        yield return path;
+        yield return new FileInfo(path);
     }
 
     public static Stream OpenCachedAssembly(string path)

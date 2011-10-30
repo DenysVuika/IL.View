@@ -36,12 +36,12 @@ namespace IL.View.Views
 {
   public partial class AssemblyFileSelector : ChildWindow
   {
-    private AssemblyDefinition _callingAssembly;
+    private readonly AssemblyDefinition _callingAssembly;
 
     public AssemblyDefinition Definition { get; private set; }
     private readonly AssemblyNameReference _reference;
     private string _repository;
-    private RepositoryClient _repositoryClient = new RepositoryClient();
+    private readonly RepositoryClient _repositoryClient = new RepositoryClient();
 
     public AssemblyFileSelector(AssemblyDefinition callingAssembly, AssemblyNameReference reference)
     {
@@ -90,18 +90,18 @@ namespace IL.View.Views
         DialogResult = false;
         return;
       }
-
+      
       Definition = AssemblyDefinition.ReadAssembly(dialog.File.OpenRead());
       if (Definition == null) Debugger.Break();
 
       if (Definition.FullName == _reference.FullName)
       {
-        if (Definition.IsSilverlight())
-          StorageService.CacheSilverlightAssembly(dialog.File.Name, dialog.File.OpenRead());
-        else
-          StorageService.CacheNetAssembly(dialog.File.Name, dialog.File.OpenRead());
+        string assemblyPath = Definition.IsSilverlight() 
+          ? StorageService.CacheSilverlightAssembly(dialog.File.Name, dialog.File.OpenRead()) 
+          : StorageService.CacheNetAssembly(dialog.File.Name, dialog.File.OpenRead());
 
-        ApplicationModel.Current.AssemblyCache.AddAssembly(Definition);
+        var assemblyStream = new AssemblyFileStream(dialog.File);
+        ApplicationModel.Current.AssemblyCache.LoadAssembly(assemblyStream, Definition);
 
         DialogResult = true;
       }
@@ -137,13 +137,13 @@ namespace IL.View.Views
       string fileName = definition.Name.Name + ".dll";
 
       // TODO: take into account partial trust in-browser mode
+
+      string assemblyPath = Definition.IsSilverlight()
+        ? StorageService.CacheSilverlightAssembly(fileName, data)
+        : StorageService.CacheNetAssembly(fileName, data);
       
-      if (Definition.IsSilverlight())
-        StorageService.CacheSilverlightAssembly(fileName, data);
-      else
-        StorageService.CacheNetAssembly(fileName, data);
-      
-      ApplicationModel.Current.AssemblyCache.AddAssembly(definition);
+      var assemblyStream = new AssemblyMemoryStream(fileName, data);
+      ApplicationModel.Current.AssemblyCache.LoadAssembly(assemblyStream, definition);
 
       Definition = definition;
       DialogResult = true;

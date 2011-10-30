@@ -22,17 +22,14 @@
  * THE SOFTWARE.
  * */
 
-using System;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
 using System.IO;
 using System.Windows.Input;
-using System.Windows.Resources;
+using System.Windows.Media.Imaging;
 using IL.View.Controls.CodeView;
+using IL.View.Model;
 using IL.View.Services;
 using Mono.Cecil;
-using System.Windows;
-using System.Windows.Media.Imaging;
 
 namespace IL.View.Controls
 {
@@ -41,64 +38,31 @@ namespace IL.View.Controls
     [Import]
     public IContentViewerService ContentViewerService { get; set; }
 
-    private readonly StreamResourceInfo _package;
-    private readonly string _resourceName;
-    private readonly string _resourceUri;
     private readonly string _extension;
+
+    private readonly AssemblyStream _packageEntry;
+    private readonly string _header;
 
     public override AssemblyDefinition DeclaringAssembly
     {
       get { return null; }
     }
 
-    public XapEntryNode(StreamResourceInfo package, string resourceName, string resourceUri)
+    public XapEntryNode(AssemblyStream packageEntry, string header)
       : base(null)
     {
       DefaultStyleKey = typeof(XapEntryNode);
 
-      _package = package;
-      _resourceName = resourceName;
-      _resourceUri = resourceUri;
+      _packageEntry = packageEntry;
+      _header = header;
 
-      _extension = Path.GetExtension(resourceName);
+      _extension = Path.GetExtension(header);
       if (!string.IsNullOrEmpty(_extension)) _extension = _extension.ToLowerInvariant();
 
-      Header = base.CreateHeaderCore(GetEntryIcon(_resourceName), null, resourceName, true);
+      Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.GetFileIcon(header), null, header, true);
       CompositionInitializer.SatisfyImports(this);
     }
-
-    private Stream OpenRead()
-    {
-      var streamInfo = Application.GetResourceStream(_package, new Uri(_resourceUri, UriKind.Relative));
-      if (streamInfo == null)
-      {
-        Debug.WriteLine("Error loading file '{0}'", _resourceUri);
-        return null;
-      }
-      return streamInfo.Stream;
-    }
     
-    private static string GetEntryIcon(string resouceUri)
-    {
-      var ext = Path.GetExtension(resouceUri);
-      if (!string.IsNullOrWhiteSpace(ext)) ext = ext.ToLowerInvariant();
-
-      switch (ext)
-      {
-        case ".dll":
-          return DefaultImages.AssemblyBrowser.Assembly;
-        case ".xml":
-        case ".xaml":
-        case ".clientconfig":
-          return DefaultImages.AssemblyBrowser.FileXml;
-        case ".png":
-        case ".jpg":
-          return DefaultImages.AssemblyBrowser.FileImage;
-        default:
-          return DefaultImages.AssemblyBrowser.FileMisc;
-      }
-    }
-
     protected override void OnKeyDown(KeyEventArgs e)
     {
       if (e.Key == Key.Space)
@@ -128,16 +92,16 @@ namespace IL.View.Controls
 
     private bool OpenAsXml()
     {
-      var content = new StreamReader(OpenRead()).ReadToEnd();
-      ContentViewerService.ShowSourceCode(_resourceName, SourceLanguageType.Xaml, content);
+      var content = new StreamReader(_packageEntry.OpenRead()).ReadToEnd();
+      ContentViewerService.ShowSourceCode(_header, SourceLanguageType.Xaml, content);
       return true;
     }
 
     private bool OpenAsImage()
     {
       var bitmap = new BitmapImage();
-      bitmap.SetSource(OpenRead());
-      ContentViewerService.ShowImage(_resourceName, bitmap);
+      bitmap.SetSource(_packageEntry.OpenRead());
+      ContentViewerService.ShowImage(_header, bitmap);
       return true;
     }
   }

@@ -51,7 +51,7 @@
       </Grid.RowDefinitions>
 
       <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,5">
-        <Button Content="Load assembly" Visibility="Collapsed" Click="OnLoadAssemblyClick" Style="{StaticResource GreenButton}"/>
+        <!--<Button Content="Load assembly" Click="OnLoadAssemblyClick" Style="{StaticResource GreenButton}"/>-->
       </StackPanel>
 
       <Grid Grid.Row="1">

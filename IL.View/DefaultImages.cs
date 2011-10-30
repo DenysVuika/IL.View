@@ -25,6 +25,7 @@
 using System;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using System.IO;
 
 namespace IL.View
 {
@@ -64,16 +65,48 @@ namespace IL.View
       public const string FileXml = "file-xml-16";
       public const string FileMisc = "file-misc-16";
       public const string FileImage = "file-image-16";
-      public const string FolderClosed = "folder-closed-16";
+      public const string FileResource = "file-resource-16";
+      public const string Folder = "folder-16";
       public const string Bug = "bug";
       public const string BugError = "bug_error";
 
+      // TODO: Introduce caching!
       public static Image GetDefaultImage(string name)
       {
         return new Image
         {
           Source = new BitmapImage(new Uri(string.Format("{0}{1}.png", ResourcePath, name), UriKind.RelativeOrAbsolute))
         };
+      }
+
+      // Returns 
+
+      /// <summary>
+      /// Gets the name of the icon resource for a given file name based on file extension.
+      /// </summary>
+      /// <param name="fileName">Name of the file.</param>
+      /// <returns>Name of the default icon resource.</returns>
+      public static string GetFileIcon(string fileName)
+      {
+        if (string.IsNullOrWhiteSpace(fileName)) return FileMisc;
+
+        var extension = Path.GetExtension(fileName);
+        if (string.IsNullOrEmpty(extension)) return FileMisc;
+
+        switch (extension.ToLowerInvariant())
+        {
+          case ".dll":
+            return Assembly;
+          case ".xml":
+          case ".xaml":
+          case ".clientconfig":
+            return FileXml;
+          case ".png":
+          case ".jpg":
+            return FileImage;
+          default:
+            return FileMisc;
+        }
       }
     }    
   }

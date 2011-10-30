@@ -37,9 +37,9 @@ using IL.View.Controls;
 using IL.View.Controls.CodeView;
 using IL.View.Decompiler;
 using IL.View.Model;
+using IL.View.Services;
 using IL.View.Views;
 using Mono.Cecil;
-using IL.View.Services;
 
 namespace IL.View
 {
@@ -109,13 +109,13 @@ namespace IL.View
       
       ContentViewerService.SourceCodeViewRequested -= OnSourceCodeViewRequested;
       ContentViewerService.ImageViewRequested -= OnImageViewRequested;
-
+      
       base.OnNavigatingFrom(e);
     }
 
     private void AssemblyCache_AssemblyAdded(object sender, AssemblyDefinitionEventArgs e)
     {
-      LoadAssembly(e.Definition);
+      LoadAssembly(e.Definition, e.Source);
     }
 
     private void AssemblyCache_AssemblyRemoved(object sender, AssemblyDefinitionEventArgs e)
@@ -182,12 +182,18 @@ namespace IL.View
             }
             else
             {
-              var assembly = AssemblyDefinition.ReadAssembly(fileInfo.OpenRead());
-              if (assembly.IsSilverlight())
-                StorageService.CacheSilverlightAssembly(fileInfo.Name, fileInfo.OpenRead());
-              else
-                StorageService.CacheNetAssembly(fileInfo.Name, fileInfo.OpenRead());
-              Dispatcher.BeginInvoke(() => LoadOrReplaceAssembly(assembly));
+              var definition = AssemblyDefinition.ReadAssembly(fileInfo.OpenRead());
+
+              string assemblyPath = definition.IsSilverlight() 
+                ? StorageService.CacheSilverlightAssembly(fileInfo.Name, fileInfo.OpenRead()) 
+                : StorageService.CacheNetAssembly(fileInfo.Name, fileInfo.OpenRead());
+              
+              Dispatcher.BeginInvoke(() =>
+              {
+                var assemblyStream = new AssemblyFileStream(fileInfo);
+                ApplicationModel.Current.AssemblyCache.LoadAssembly(assemblyStream, definition, false);
+                LoadOrReplaceAssembly(definition, assemblyStream);
+              });
             }
           }
           catch (Exception ex)
@@ -203,13 +209,13 @@ namespace IL.View
 
     private void LoadXapPackage(FileInfo fileInfo)
     {
-      var node = new XapPackageNode(fileInfo);
+      var node = new XapPackageNode(new AssemblyPackageStream(fileInfo));
       SilverlightAssemblies.Items.Add(node);
     }
 
-    private void LoadAssembly(AssemblyDefinition definition)
+    private void LoadAssembly(AssemblyDefinition definition, AssemblyStream source)
     {
-      var node = new AssemblyNode(definition);
+      var node = new AssemblyNode(definition, source);
 
       if (definition.IsSilverlight())
         SilverlightAssemblies.Items.Add(node);
@@ -224,14 +230,10 @@ namespace IL.View
       root.Items.Remove(view);
     }
 
-    private void LoadOrReplaceAssembly(AssemblyDefinition definition)
+    private void LoadOrReplaceAssembly(AssemblyDefinition definition, AssemblyStream source)
     {
-      var assemblyView = new AssemblyNode(definition);
-
-      if (definition.IsSilverlight())
-        AddOrReplaceAssemblyView(SilverlightAssemblies, assemblyView);
-      else
-        AddOrReplaceAssemblyView(NetAssemblies, assemblyView);
+      var assemblyView = new AssemblyNode(definition, source);
+      AddOrReplaceAssemblyView(definition.IsSilverlight() ? SilverlightAssemblies : NetAssemblies, assemblyView);
     }
 
     // TODO: Maybe check against AssemblyChache instead of visual tree?
@@ -260,6 +262,7 @@ namespace IL.View
       root.Items.Add(assemblyView);
     }
 
+    /*
     private void OnLoadAssemblyClick(object sender, RoutedEventArgs e)
     {
       var dlg = new OpenFileDialog();
@@ -270,10 +273,12 @@ namespace IL.View
           try
           {
             var definition = AssemblyDefinition.ReadAssembly(dlg.File.OpenRead());
-            if (definition.IsSilverlight())
-              StorageService.CacheSilverlightAssembly(dlg.File.Name, dlg.File.OpenRead());
-            else
-              StorageService.CacheNetAssembly(dlg.File.Name, dlg.File.OpenRead());
+
+            string assemblyPath = definition.IsSilverlight() 
+              ? StorageService.CacheSilverlightAssembly(dlg.File.Name, dlg.File.OpenRead()) 
+              : StorageService.CacheNetAssembly(dlg.File.Name, dlg.File.OpenRead());
+
+            ApplicationModel.Current.AssemblyCache.AddAssembly(assemblyPath, definition);
 
             LoadOrReplaceAssembly(definition);
           }
@@ -284,6 +289,7 @@ namespace IL.View
         });
       }
     }
+    */
 
     private void OnItemSelected(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
@@ -549,21 +555,25 @@ namespace IL.View
 
       ThreadPool.QueueUserWorkItem(state => Dispatcher.BeginInvoke(() =>
       {
-        foreach (var assemblyName in StorageService.EnumerateAssemblyCache())
+        //foreach (var assemblyPath in StorageService.EnumerateAssemblyCache())
+        //{
+        //  using (var stream = StorageService.OpenCachedAssembly(assemblyPath))
+        //  {
+        //    try
+        //    {
+        //      var definition = AssemblyDefinition.ReadAssembly(stream);
+        //      ApplicationModel.Current.AssemblyCache.AddAssembly(assemblyPath, definition);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //      Debug.WriteLine(ex.Message);
+        //    }
+        //  }
+        //}
+
+        foreach (var fileInfo in StorageService.EnumerateFiles())
         {
-          using (var stream = StorageService.OpenCachedAssembly(assemblyName))
-          {
-            try
-            {
-              var definition = AssemblyDefinition.ReadAssembly(stream);
-              //LoadAssembly(definition);
-              ApplicationModel.Current.AssemblyCache.AddAssembly(definition);
-            }
-            catch (Exception ex)
-            {
-              Debug.WriteLine(ex.Message);
-            }
-          }
+          ApplicationModel.Current.AssemblyCache.LoadAssembly(new AssemblyFileStream(fileInfo));
         }
 
         //LoadingAssembliesIndicator.IsBusy = false;

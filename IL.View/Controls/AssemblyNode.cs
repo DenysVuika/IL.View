@@ -32,6 +32,8 @@ namespace IL.View.Controls
 {
   public sealed class AssemblyNode : TreeNode<AssemblyDefinition>
   {
+    private readonly AssemblyStream _assemblySource;
+
     public override AssemblyDefinition DeclaringAssembly
     {
       get { return AssociatedObject; }
@@ -42,10 +44,12 @@ namespace IL.View.Controls
       get { return AssociatedObject.IsSilverlight(); }
     }
 
-    public AssemblyNode(AssemblyDefinition component)
+    public AssemblyNode(AssemblyDefinition component, AssemblyStream source)
       : base(component)
     {
       DefaultStyleKey = typeof(AssemblyNode);
+      _assemblySource = source;
+
       var name = string.Format("{0}  ({1})", component.Name.Name, component.IsSilverlight() ? "SL" : ".NET");
       Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.Assembly, null, name, true);            
       InitializeNode();
@@ -87,13 +91,27 @@ namespace IL.View.Controls
 
         Items.Add(moduleView);
       }
+
+      if (AssociatedObject.MainModule.HasResources && AssociatedObject.IsSilverlight())
+      {
+        var resourceFolder = new FolderNode("Resources");
+        Items.Add(resourceFolder);
+        
+        foreach (var resource in AssociatedObject.MainModule.Resources)
+        {
+          if (resource.ResourceType != ResourceType.Embedded) continue;
+
+          var resourceNode = new ResourceNode(AssociatedObject, _assemblySource, resource);
+          resourceFolder.Items.Add(resourceNode);
+        }
+      }
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
       if (e.Key == Key.Delete)
       {
-        ApplicationModel.Current.AssemblyCache.RemoveAssembly(AssociatedObject);
+        ApplicationModel.Current.AssemblyCache.UnloadAssembly(AssociatedObject);
         e.Handled = true;
         return;
       }

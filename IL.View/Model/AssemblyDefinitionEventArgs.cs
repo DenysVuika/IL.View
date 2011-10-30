@@ -30,10 +30,12 @@ namespace IL.View.Model
   public sealed class AssemblyDefinitionEventArgs : EventArgs
   {
     public AssemblyDefinition Definition { get; private set; }
+    public AssemblyStream Source { get; private set; }
 
-    public AssemblyDefinitionEventArgs(AssemblyDefinition definition)
+    public AssemblyDefinitionEventArgs(AssemblyDefinition definition, AssemblyStream source)
     {
       Definition = definition;
+      Source = source;
     }
   }
 }

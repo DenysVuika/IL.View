@@ -43,7 +43,7 @@ namespace IL.View.Controls
 
       DefaultStyleKey = typeof(FolderNode);
       FolderName = folderName;
-      Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.FolderClosed, null, folderName, true);
+      Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.Folder, null, folderName, true);
     }
   }
 }
