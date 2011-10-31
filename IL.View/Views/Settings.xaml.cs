@@ -26,22 +26,30 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 using IL.View.Model;
+using System.Runtime.InteropServices.Automation;
 
 namespace IL.View.Views
 {
   public partial class Settings : Page
   {
-    private RepositorySettings _repositorySettings;
+    private readonly RepositorySettings _repositorySettings;
+    private readonly ReferencePathsSettings _referencePathsSettings;
 
     public Settings()
     {
       InitializeComponent();
       _repositorySettings = Resources["RepositorySettings"] as RepositorySettings;
+      _referencePathsSettings = Resources["ReferencePathsSettings"] as ReferencePathsSettings;
     }
 
     // Executes when the user navigates to this page.
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
+      // Display "Reference Paths" tab only for Windows full-trust installation.
+      ReferencePathsTab.Visibility =
+        Application.Current.HasElevatedPermissions && AutomationFactory.IsAvailable
+          ? Visibility.Visible
+          : Visibility.Collapsed;
     }
 
     private void OnAddRepositoryClick(object sender, RoutedEventArgs e)
@@ -53,15 +61,25 @@ namespace IL.View.Views
         RepositoryAddress.Text = string.Empty;
     }
 
+    private void OnAddReferenceFolderClick(object sender, RoutedEventArgs e)
+    {
+      var path = ReferencePath.Text;
+      if (string.IsNullOrWhiteSpace(path)) return;
+
+      if (_referencePathsSettings.AddFolder(path))
+        ReferencePath.Text = string.Empty;
+    }
+
     private void OnRemoveEntryClick(object sender, RoutedEventArgs e)
     {
       var menuItem = sender as MenuItem;
       if (menuItem == null) return;
 
-      var definition = menuItem.DataContext as RepositoryDefinition;
-      if (definition == null) return;
+      var repositoryDefinition = menuItem.DataContext as RepositoryDefinition;
+      if (repositoryDefinition != null) _repositorySettings.Definitions.Remove(repositoryDefinition);
 
-      _repositorySettings.Definitions.Remove(definition);
+      var referenceFolder = menuItem.DataContext as ReferenceFolder;
+      if (referenceFolder != null) _referencePathsSettings.Folders.Remove(referenceFolder);
     }
 
   }

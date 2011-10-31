@@ -34,95 +34,93 @@ using System.Xml.Linq;
 
 namespace IL.View.Model
 {
-  [DebuggerDisplay("{Address}")]
-  public sealed class RepositoryDefinition
+  [DebuggerDisplay("{Path}")]
+  public sealed class ReferenceFolder
   {
-    public string Address { get; set; }
+    public string Path { get; set; }
 
-    public RepositoryDefinition() { }
-
-    public RepositoryDefinition(string address)
+    public ReferenceFolder(string path)
     {
-      if (string.IsNullOrEmpty(address)) throw new ArgumentNullException("address");
-      Address = address;
+      if (string.IsNullOrWhiteSpace(path)) throw new ArgumentNullException("path");
+      Path = path;
     }
   }
-
-  public sealed class RepositorySettings : INotifyPropertyChanged
+  
+  public sealed class ReferencePathsSettings : INotifyPropertyChanged
   {
-    public static RepositorySettings Current
+    public static ReferencePathsSettings Current
     {
-      get { return new RepositorySettings(); }
+      get { return new ReferencePathsSettings(); }
     }
 
     public bool AutoSave { get; set; }
 
-    private ObservableCollection<RepositoryDefinition> _definitions = new ObservableCollection<RepositoryDefinition>();
+    private ObservableCollection<ReferenceFolder> _folders = new ObservableCollection<ReferenceFolder>();
 
-    public ObservableCollection<RepositoryDefinition> Definitions
+    public ObservableCollection<ReferenceFolder> Folders
     {
-      get { return _definitions; }
+      get { return _folders; }
       private set
       {
-        if (_definitions == value) return;
-        if (_definitions != null) _definitions.CollectionChanged -= OnDefinitionsChanged;
-        _definitions = value;
-        if (_definitions != null) _definitions.CollectionChanged += OnDefinitionsChanged;
+        if (_folders == value) return;
+        if (_folders != null) _folders.CollectionChanged -= OnFoldersChanged;
+        _folders = value;
+        if (_folders != null) _folders.CollectionChanged += OnFoldersChanged;
       }
     }
 
-    public RepositorySettings()
+    public ReferencePathsSettings()
       : this(true)
     {
     }
 
-    public RepositorySettings(bool autosave)
+    public ReferencePathsSettings(bool autosave)
     {
       AutoSave = autosave;
       Load();
     }
 
-    public bool AddRepository(string address)
+    public bool AddFolder(string path)
     {
-      if (string.IsNullOrWhiteSpace(address)) throw new ArgumentNullException("address");
+      if (string.IsNullOrWhiteSpace(path)) throw new ArgumentNullException("path");
 
-      if (!Definitions.Any(d => d.Address.Equals(address, StringComparison.OrdinalIgnoreCase)))
+      if (!Folders.Any(f => f.Path.Equals(path, StringComparison.OrdinalIgnoreCase)))
       {
-        Definitions.Add(new RepositoryDefinition(address));
+        Folders.Add(new ReferenceFolder(path));
         return true;
       }
 
       return false;
     }
 
-    private void OnDefinitionsChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void OnFoldersChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
       if (AutoSave) Save();
     }
 
     public void Save()
     {
-      var data = new XElement("Repositories");
+      var data = new XElement("ReferencePaths");
 
-      foreach (var address in Definitions.Select(d => d.Address).Distinct())
-        data.Add(new XElement("Repository",
-            new XAttribute("Address", address)));
+      foreach (var address in Folders.Select(d => d.Path).Distinct())
+        data.Add(new XElement("ReferenceFolder",
+            new XAttribute("Path", address)));
 
-      IsolatedStorageSettings.ApplicationSettings["RepositorySettings"] = data.ToString();
+      IsolatedStorageSettings.ApplicationSettings["ReferencePaths"] = data.ToString();
       IsolatedStorageSettings.ApplicationSettings.Save();
     }
 
     public void Load()
     {
-      Definitions = new ObservableCollection<RepositoryDefinition>(LoadSettings());
-      OnPropertyChanged("Definitions");
+      Folders = new ObservableCollection<ReferenceFolder>(LoadSettings());
+      OnPropertyChanged("Folders");
     }
 
-    private IEnumerable<RepositoryDefinition> LoadSettings()
+    private static IEnumerable<ReferenceFolder> LoadSettings()
     {
-      string settings = null;
+      string settings;
 
-      if (!IsolatedStorageSettings.ApplicationSettings.TryGetValue<string>("RepositorySettings", out settings))
+      if (!IsolatedStorageSettings.ApplicationSettings.TryGetValue("ReferencePaths", out settings))
         yield break;
 
       var data = XElement.Parse(settings);
@@ -130,9 +128,9 @@ namespace IL.View.Model
       {
         foreach (var element in data.Elements())
         {
-          var address = element.Attribute("Address");
-          if (address != null)
-            yield return new RepositoryDefinition(address.Value);
+          var path = element.Attribute("Path");
+          if (path != null)
+            yield return new ReferenceFolder(path.Value);
         }
       }
     }

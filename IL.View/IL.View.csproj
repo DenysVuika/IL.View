@@ -68,6 +68,7 @@
     <Reference Include="ICSharpCode.NRefactory">
       <HintPath>..\Dependencies\ICSharpCode.NRefactory.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp, Version=2.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="Mono.Cecil">
       <HintPath>..\Dependencies\Mono.Cecil.dll</HintPath>
     </Reference>
@@ -131,6 +132,7 @@
     <Compile Include="Model\CSharpLanguage.cs" />
     <Compile Include="Model\FormattingUtils.cs" />
     <Compile Include="Model\LanguageInfo.cs" />
+    <Compile Include="Model\ReferencePathsSettings.cs" />
     <Compile Include="Model\RepositorySettings.cs" />
     <Compile Include="Model\StorageService.cs" />
     <Compile Include="Model\ContextMenuBuilder.cs" />

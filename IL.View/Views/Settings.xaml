@@ -11,6 +11,7 @@
 
   <navigation:Page.Resources>
     <model:RepositorySettings x:Key="RepositorySettings"/>
+    <model:ReferencePathsSettings x:Key="ReferencePathsSettings"/>
   </navigation:Page.Resources>
 
   <navigation:Page.DataContext>
@@ -31,7 +32,44 @@
                     ToolTipService.ToolTip="Determines whether the source code should be displayed automatically."/>
         </StackPanel>
       </sdk:TabItem>
+      
       <sdk:TabItem Header="Disassembler"/>
+      
+      <sdk:TabItem x:Name="ReferencePathsTab" Header="Reference Paths" Visibility="Collapsed">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+          </Grid.RowDefinitions>
+
+          <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="ReferencePath" Grid.Column="0" Height="25" Style="{StaticResource DarkTextBox}"/>
+            <Button Grid.Column="1" Content="Add" Click="OnAddReferenceFolderClick" Height="25" Margin="2,0,0,0"/>
+          </Grid>
+
+          <ListBox Grid.Row="1" 
+                   ItemsSource="{Binding Path=Folders, Source={StaticResource ReferencePathsSettings}}"                   
+                   Margin="0,5,0,0">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <StackPanel>
+                  <toolkit:ContextMenuService.ContextMenu>
+                    <toolkit:ContextMenu>
+                      <toolkit:MenuItem Header="Remove entry" Click="OnRemoveEntryClick"/>
+                    </toolkit:ContextMenu>
+                  </toolkit:ContextMenuService.ContextMenu>
+                  <TextBlock Text="{Binding Path}"/>
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </sdk:TabItem>
+      
       <sdk:TabItem Header="Repositories">
         <Grid>
           <Grid.RowDefinitions>
