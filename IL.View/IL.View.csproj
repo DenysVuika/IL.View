@@ -130,6 +130,7 @@
     <Compile Include="Model\AssemblyStream.cs" />
     <Compile Include="Model\BusyIndicatorContext.cs" />
     <Compile Include="Model\CSharpLanguage.cs" />
+    <Compile Include="Model\FileService.cs" />
     <Compile Include="Model\FormattingUtils.cs" />
     <Compile Include="Model\LanguageInfo.cs" />
     <Compile Include="Model\ReferencePathsSettings.cs" />

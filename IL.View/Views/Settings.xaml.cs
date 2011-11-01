@@ -24,6 +24,8 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Navigation;
 using IL.View.Model;
 using System.Runtime.InteropServices.Automation;
@@ -80,6 +82,25 @@ namespace IL.View.Views
 
       var referenceFolder = menuItem.DataContext as ReferenceFolder;
       if (referenceFolder != null) _referencePathsSettings.Folders.Remove(referenceFolder);
+    }
+
+    private void OnReferenceFolderSelected(object sender, SelectionChangedEventArgs e)
+    {
+      if (e.AddedItems.Count > 0)
+      {
+        RecursiveSearch.IsEnabled = true;
+        RecursiveSearch.SetBinding(ToggleButton.IsCheckedProperty, new Binding("RecursiveSearch")
+        {
+          Mode = BindingMode.TwoWay,
+          Source = e.AddedItems[0]
+        });
+      }
+      else
+      {
+        RecursiveSearch.IsEnabled = false;
+        RecursiveSearch.DataContext = null;
+        RecursiveSearch.ClearValue(ToggleButton.IsCheckedProperty);
+      }
     }
 
   }

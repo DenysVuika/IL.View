@@ -373,6 +373,10 @@ namespace IL.View
       if (definition == null)
         definition = TryResolveHigherVersionAssembly(_decompileTask.CallingAssembly, reference);
 
+      // try to resolve assembly from user-defined reference paths
+      if (definition == null)
+        definition = FileService.FindExternalAssembly(reference, Dispatcher);
+
       // ask user to resolve assembly manually
       if (definition == null)
       {

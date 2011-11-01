@@ -35,14 +35,41 @@ using System.Xml.Linq;
 namespace IL.View.Model
 {
   [DebuggerDisplay("{Path}")]
-  public sealed class ReferenceFolder
+  public sealed class ReferenceFolder : INotifyPropertyChanged
   {
+    private readonly ReferencePathsSettings _settings;
+    private bool _recursiveSearch;
+
     public string Path { get; set; }
 
-    public ReferenceFolder(string path)
+    public bool RecursiveSearch
     {
+      get { return _recursiveSearch; }
+      set
+      {
+        if (_recursiveSearch == value) return;
+        _recursiveSearch = value;
+        OnPropertyChanged("RecursiveSearch");
+        if (_settings.AutoSave) _settings.Save();
+      }
+    }
+    
+    internal ReferenceFolder(ReferencePathsSettings settings, string path, bool recursiveSearch = false)
+    {
+      if (settings == null) throw new ArgumentNullException("settings");
       if (string.IsNullOrWhiteSpace(path)) throw new ArgumentNullException("path");
+
+      _settings = settings;
+      _recursiveSearch = recursiveSearch;
       Path = path;
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    private void OnPropertyChanged(string propertyName)
+    {
+      var handler = PropertyChanged;
+      if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
     }
   }
   
@@ -54,7 +81,7 @@ namespace IL.View.Model
     }
 
     public bool AutoSave { get; set; }
-
+    
     private ObservableCollection<ReferenceFolder> _folders = new ObservableCollection<ReferenceFolder>();
 
     public ObservableCollection<ReferenceFolder> Folders
@@ -86,7 +113,7 @@ namespace IL.View.Model
 
       if (!Folders.Any(f => f.Path.Equals(path, StringComparison.OrdinalIgnoreCase)))
       {
-        Folders.Add(new ReferenceFolder(path));
+        Folders.Add(new ReferenceFolder(this, path));
         return true;
       }
 
@@ -102,9 +129,10 @@ namespace IL.View.Model
     {
       var data = new XElement("ReferencePaths");
 
-      foreach (var address in Folders.Select(d => d.Path).Distinct())
+      foreach (var folder in Folders)
         data.Add(new XElement("ReferenceFolder",
-            new XAttribute("Path", address)));
+            new XAttribute("Path", folder.Path),
+            new XAttribute("RecursiveSearch", folder.RecursiveSearch)));
 
       IsolatedStorageSettings.ApplicationSettings["ReferencePaths"] = data.ToString();
       IsolatedStorageSettings.ApplicationSettings.Save();
@@ -116,7 +144,7 @@ namespace IL.View.Model
       OnPropertyChanged("Folders");
     }
 
-    private static IEnumerable<ReferenceFolder> LoadSettings()
+    private IEnumerable<ReferenceFolder> LoadSettings()
     {
       string settings;
 
@@ -128,9 +156,9 @@ namespace IL.View.Model
       {
         foreach (var element in data.Elements())
         {
-          var path = element.Attribute("Path");
-          if (path != null)
-            yield return new ReferenceFolder(path.Value);
+          var path = (string)element.Attribute("Path");
+          var recursiveSearch = (bool)element.Attribute("RecursiveSearch");
+          yield return new ReferenceFolder(this, path, recursiveSearch);
         }
       }
     }
