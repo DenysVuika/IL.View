@@ -625,10 +625,20 @@ namespace IL.View
 
     private void OnSourceCodeViewRequested(object sender, SourceCodeEventArgs e)
     {
+      var sourceCode = e.SourceCode;
+
+      switch (e.SourceLanguage)
+      {
+        case SourceLanguageType.Xml:
+        case SourceLanguageType.Xaml:
+          sourceCode = FormattingUtils.FormatXml(e.SourceCode);
+          break;
+      }
+
       var view = new CodeTextBox
       {
         SourceLanguage = e.SourceLanguage,
-        SourceCode = e.SourceCode
+        SourceCode = sourceCode
       };
 
       DisplayContent(e.SourceName, view);
@@ -652,5 +662,7 @@ namespace IL.View
       ContentTab.Visibility = Visibility.Visible;
       ContentTab.IsSelected = true;
     }
+
+
   }
 }

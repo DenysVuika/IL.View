@@ -22,7 +22,10 @@
  * THE SOFTWARE.
  * */
 
+using System.IO;
 using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 using Mono.Cecil;
 
 namespace IL.View.Model
@@ -50,5 +53,31 @@ namespace IL.View.Model
       return result.ToString();
     }
 
+    public static string FormatXml(string stringXml)
+    {
+      var stringReader = new StringReader(stringXml);
+      var xDoc = XDocument.Load(stringReader);
+      var stringBuilder = new StringBuilder();
+      XmlWriter xmlWriter = null;
+      try
+      {
+        var settings = new XmlWriterSettings
+        {
+          Indent = true,
+          ConformanceLevel = ConformanceLevel.Auto,
+          //IndentChars = " ",
+          OmitXmlDeclaration = true
+        };
+       
+        xmlWriter = XmlWriter.Create(stringBuilder, settings);
+        xDoc.WriteTo(xmlWriter);
+      }
+      finally
+      {
+        if (xmlWriter != null)
+          xmlWriter.Close();
+      }
+      return stringBuilder.ToString();
+    } 
   }
 }
