@@ -45,8 +45,6 @@ namespace IL.View
 {
   public partial class Home : Page
   {
-    private static readonly string[] KnownExtensions = new[] { ".dll", ".exe", ".xap", ".nupkg" };
-
     private readonly Queue<FileInfo> _pendingDownloads = new Queue<FileInfo>();
     private readonly BusyIndicatorContext _busyContext = new BusyIndicatorContext();
 
@@ -153,7 +151,7 @@ namespace IL.View
       foreach (var fi in files)
       {
         var ext = Path.GetExtension(fi.Name);
-        if (KnownExtensions.Contains(ext))
+        if (KnownFormats.Assembly.Contains(ext) || KnownFormats.Zip.Contains(ext))
           _pendingDownloads.Enqueue(fi);
       }
 
@@ -178,13 +176,10 @@ namespace IL.View
           {
             string extension = Path.GetExtension(fileInfo.Name);
 
-            if (extension == ".xap")
+            if (KnownFormats.Zip.Contains(extension))
             {
-              Dispatcher.BeginInvoke(() => LoadZiPackage(DefaultImages.AssemblyBrowser.XapPackage, fileInfo));
-            }
-            else if (extension == ".nupkg")
-            {
-              Dispatcher.BeginInvoke(() => LoadZiPackage(DefaultImages.AssemblyBrowser.NugetPackage, fileInfo));
+              StorageService.AddFileToCache(fileInfo);
+              Dispatcher.BeginInvoke(() => LoadZiPackage(fileInfo));
             }
             else
             {
@@ -213,9 +208,9 @@ namespace IL.View
       });
     }
 
-    private void LoadZiPackage(string icon, FileInfo fileInfo)
+    private void LoadZiPackage(FileInfo fileInfo)
     {
-      var node = new ZipFileNode(icon, new AssemblyPackageStream(fileInfo));
+      var node = new ZipFileNode(DefaultImages.AssemblyBrowser.GetFileIcon(fileInfo.Name), new AssemblyPackageStream(fileInfo));
       SilverlightAssemblies.Items.Add(node);
     }
 
@@ -565,25 +560,22 @@ namespace IL.View
 
       ThreadPool.QueueUserWorkItem(state => Dispatcher.BeginInvoke(() =>
       {
-        //foreach (var assemblyPath in StorageService.EnumerateAssemblyCache())
-        //{
-        //  using (var stream = StorageService.OpenCachedAssembly(assemblyPath))
-        //  {
-        //    try
-        //    {
-        //      var definition = AssemblyDefinition.ReadAssembly(stream);
-        //      ApplicationModel.Current.AssemblyCache.AddAssembly(assemblyPath, definition);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //      Debug.WriteLine(ex.Message);
-        //    }
-        //  }
-        //}
-
         foreach (var fileInfo in StorageService.EnumerateFiles())
         {
-          ApplicationModel.Current.AssemblyCache.LoadAssembly(new AssemblyFileStream(fileInfo));
+          var extension = Path.GetExtension(fileInfo.Name);
+          if (string.IsNullOrEmpty(extension)) continue;
+
+          if (KnownFormats.Zip.Contains(extension))
+          {
+            LoadZiPackage(fileInfo);
+            continue;
+          }
+
+          if (KnownFormats.Assembly.Contains(extension))
+          {
+            ApplicationModel.Current.AssemblyCache.LoadAssembly(new AssemblyFileStream(fileInfo));
+            continue;
+          }
         }
 
         //LoadingAssembliesIndicator.IsBusy = false;

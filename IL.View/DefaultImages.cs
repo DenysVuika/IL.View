@@ -101,6 +101,10 @@ namespace IL.View
         if (KnownFormats.Assembly.Contains(extension)) return Assembly;
         if (KnownFormats.Xml.Contains(extension)) return FileXml;
         if (KnownFormats.Image.Contains(extension)) return FileImage;
+
+        if (extension == ".xap") return XapPackage;
+        if (extension == ".nupkg") return NugetPackage;
+
         return FileMisc;
       }
     }

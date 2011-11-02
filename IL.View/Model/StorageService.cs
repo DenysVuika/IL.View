@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows;
 
 namespace IL.View.Model
@@ -71,6 +72,14 @@ namespace IL.View.Model
       return assemblyCacheFolder;
     }
 
+    private static string GetCacheFolder()
+    {
+      var cacheFolder = Path.Combine(GetApplicationFolder(), "Cache");
+      if (!Directory.Exists(cacheFolder))
+        Directory.CreateDirectory(cacheFolder);
+      return cacheFolder;
+    }
+
     private static void CacheAssembly(string path, Stream data)
     {
       if (data.CanSeek) data.Seek(0, SeekOrigin.Begin);
@@ -102,12 +111,35 @@ namespace IL.View.Model
       return assemblyPath;
     }
     
+    public static void AddFileToCache(FileInfo fileInfo)
+    {
+      if (!IsEnabled) return;
+
+      var path = Path.Combine(GetCacheFolder(), fileInfo.Name);
+
+      var data = fileInfo.OpenRead();
+      var buffer = new byte[data.Length];
+      data.Read(buffer, 0, buffer.Length);
+      File.WriteAllBytes(path, buffer);
+    }
+
     public static IEnumerable<FileInfo> EnumerateFiles()
     {
       if (!IsEnabled) yield break;
 
       foreach (var path in Directory.EnumerateFiles(GetAssemblyCacheFolder(), "*.dll", SearchOption.AllDirectories))
         yield return new FileInfo(path);
+
+      foreach (var path in EnumerateFiles(GetCacheFolder(), KnownFormats.Zip.Select(f => "*" + f)))
+        yield return new FileInfo(path);
+    }
+
+    //public static IEnumerable<string> EnumerateFiles(string path, params string[] filters)
+    public static IEnumerable<string> EnumerateFiles(string path, IEnumerable<string> filters)
+    {
+      return filters.Count() == 0
+          ? Directory.EnumerateFiles(path)
+          : filters.SelectMany(filter => Directory.EnumerateFiles(path, filter));
     }
 
     public static Stream OpenCachedAssembly(string path)

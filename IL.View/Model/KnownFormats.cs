@@ -26,7 +26,8 @@ namespace IL.View.Model
 {
   internal class KnownFormats
   {
-    public static readonly string[] Assembly = { ".dll" };
+    public static readonly string[] Zip = { ".xap", ".nupkg" };
+    public static readonly string[] Assembly = { ".dll", ".exe" };
     public static readonly string[] Xml = { ".xml", ".xaml", ".clientconfig", ".nuspec", ".rels", ".psmdcp" };
     public static readonly string[] Image = { ".png", ".jpg" };
   }
