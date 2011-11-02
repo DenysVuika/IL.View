@@ -31,6 +31,7 @@ using IL.View.Controls.CodeView;
 using IL.View.Model;
 using IL.View.Services;
 using Mono.Cecil;
+using System.Linq;
 
 namespace IL.View.Controls
 {
@@ -80,18 +81,9 @@ namespace IL.View.Controls
 
     private bool DisplayContent()
     {
-      switch (_extension)
-      {
-        case ".xml":
-        case ".xaml":
-        case ".clientconfig":
-          return OpenAsXml();
-        case ".png":
-        case ".jpg":
-          return OpenAsImage();
-        default:
-          return false;
-      }
+      if (KnownFormats.Xml.Contains(_extension)) return OpenAsXml();
+      if (KnownFormats.Image.Contains(_extension)) return OpenAsImage();
+      return false;
     }
 
     private bool OpenAsXml()

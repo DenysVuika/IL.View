@@ -26,11 +26,13 @@ using System;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.IO;
+using IL.View.Model;
+using System.Linq;
 
 namespace IL.View
 {
   internal static class DefaultImages
-  {    
+  {
     public static class AssemblyBrowser
     {
       private const string ResourcePath = "/IL.View;component/Images/AssemblyBrowser/";
@@ -94,21 +96,13 @@ namespace IL.View
         var extension = Path.GetExtension(fileName);
         if (string.IsNullOrEmpty(extension)) return FileMisc;
 
-        switch (extension.ToLowerInvariant())
-        {
-          case ".dll":
-            return Assembly;
-          case ".xml":
-          case ".xaml":
-          case ".clientconfig":
-            return FileXml;
-          case ".png":
-          case ".jpg":
-            return FileImage;
-          default:
-            return FileMisc;
-        }
+        extension = extension.ToLowerInvariant();
+
+        if (KnownFormats.Assembly.Contains(extension)) return Assembly;
+        if (KnownFormats.Xml.Contains(extension)) return FileXml;
+        if (KnownFormats.Image.Contains(extension)) return FileImage;
+        return FileMisc;
       }
-    }    
+    }
   }
 }

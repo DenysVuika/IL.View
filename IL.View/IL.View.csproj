@@ -132,6 +132,7 @@
     <Compile Include="Model\CSharpLanguage.cs" />
     <Compile Include="Model\FileService.cs" />
     <Compile Include="Model\FormattingUtils.cs" />
+    <Compile Include="Model\KnownFormats.cs" />
     <Compile Include="Model\LanguageInfo.cs" />
     <Compile Include="Model\ReferencePathsSettings.cs" />
     <Compile Include="Model\RepositorySettings.cs" />
