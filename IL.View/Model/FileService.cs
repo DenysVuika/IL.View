@@ -38,6 +38,7 @@ namespace IL.View.Model
     private const string ReferenceCachePrefix = "REF_";
 
     // TODO: add possibility to clear cache from UI
+    // TODO: Silvelright 5 will allow accessing local system files without COM hacks!
     public static AssemblyDefinition FindExternalAssembly(AssemblyNameReference reference, Dispatcher dispatcher)
     {
       // TODO: add support User folders

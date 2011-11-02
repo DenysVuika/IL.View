@@ -45,7 +45,7 @@ namespace IL.View
 {
   public partial class Home : Page
   {
-    private static readonly string[] KnownExtensions = new[] { ".dll", ".exe", ".xap" };
+    private static readonly string[] KnownExtensions = new[] { ".dll", ".exe", ".xap", ".nupkg" };
 
     private readonly Queue<FileInfo> _pendingDownloads = new Queue<FileInfo>();
     private readonly BusyIndicatorContext _busyContext = new BusyIndicatorContext();
@@ -176,18 +176,24 @@ namespace IL.View
                     
           try
           {
-            if (Path.GetExtension(fileInfo.Name) == ".xap")
+            string extension = Path.GetExtension(fileInfo.Name);
+
+            if (extension == ".xap")
             {
-              Dispatcher.BeginInvoke(() => LoadXapPackage(fileInfo));
+              Dispatcher.BeginInvoke(() => LoadZiPackage(DefaultImages.AssemblyBrowser.XapPackage, fileInfo));
+            }
+            else if (extension == ".nupkg")
+            {
+              Dispatcher.BeginInvoke(() => LoadZiPackage(DefaultImages.AssemblyBrowser.NugetPackage, fileInfo));
             }
             else
             {
               var definition = AssemblyDefinition.ReadAssembly(fileInfo.OpenRead());
 
-              string assemblyPath = definition.IsSilverlight() 
-                ? StorageService.CacheSilverlightAssembly(fileInfo.Name, fileInfo.OpenRead()) 
+              string assemblyPath = definition.IsSilverlight()
+                ? StorageService.CacheSilverlightAssembly(fileInfo.Name, fileInfo.OpenRead())
                 : StorageService.CacheNetAssembly(fileInfo.Name, fileInfo.OpenRead());
-              
+
               Dispatcher.BeginInvoke(() =>
               {
                 var assemblyStream = new AssemblyFileStream(fileInfo);
@@ -207,9 +213,9 @@ namespace IL.View
       });
     }
 
-    private void LoadXapPackage(FileInfo fileInfo)
+    private void LoadZiPackage(string icon, FileInfo fileInfo)
     {
-      var node = new XapPackageNode(new AssemblyPackageStream(fileInfo));
+      var node = new ZipFileNode(icon, new AssemblyPackageStream(fileInfo));
       SilverlightAssemblies.Items.Add(node);
     }
 

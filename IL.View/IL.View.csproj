@@ -117,7 +117,7 @@
     <Compile Include="Controls\SimpleNode.cs" />
     <Compile Include="Controls\TiledBackground.cs" />
     <Compile Include="Controls\TypeNode.cs" />
-    <Compile Include="Controls\XapPackageNode.cs" />
+    <Compile Include="Controls\ZipFileNode.cs" />
     <Compile Include="DefaultImages.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -263,7 +263,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\AssemblyBrowser\xap-package-16.png" />
+    <Resource Include="Images\AssemblyBrowser\package-xap.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\AssemblyBrowser\file-xml-16.png" />
@@ -282,6 +282,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\AssemblyBrowser\file-resource-16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\AssemblyBrowser\package-nuget.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

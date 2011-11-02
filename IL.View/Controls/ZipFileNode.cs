@@ -31,18 +31,18 @@ using Mono.Cecil;
 
 namespace IL.View.Controls
 {
-  public sealed class XapPackageNode : TreeNode<AssemblyPackageStream>
+  public sealed class ZipFileNode : TreeNode<AssemblyPackageStream>
   {
     public override AssemblyDefinition DeclaringAssembly
     {
       get { return null; }
     }
 
-    public XapPackageNode(AssemblyPackageStream component)
+    public ZipFileNode(string icon, AssemblyPackageStream component)
       : base(component)
     {
-      DefaultStyleKey = typeof(XapPackageNode);
-      Header = CreateHeaderCore(DefaultImages.AssemblyBrowser.XapPackage, null, component.Name, true);
+      DefaultStyleKey = typeof(ZipFileNode);
+      Header = CreateHeaderCore(string.IsNullOrEmpty(icon) ? DefaultImages.AssemblyBrowser.XapPackage : icon, null, component.Name, true);
       DataProvider = LoadSubItems;
     }
 
